@@ -1,0 +1,49 @@
+rules_version = '2';
+// ALLIN IQ · 홀덤 GTO 퀴즈 — Firestore 보안 규칙
+// 관리자 이메일: 아래 목록과 config.js 의 ADMIN_EMAILS 를 같게 맞춰 주세요.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email_verified == true
+        && request.auth.token.email in ['17gyeul@gmail.com'];
+    }
+    function hasSecret() { return exists(/databases/$(database)/documents/secret/access); }
+    function secretCode() { return get(/databases/$(database)/documents/secret/access).data.code; }
+    function isMember(uid) {
+      return hasSecret() && exists(/databases/$(database)/documents/members/$(uid))
+        && get(/databases/$(database)/documents/members/$(uid)).data.code == secretCode();
+    }
+    function blocked(uid) {
+      return exists(/databases/$(database)/documents/meta/block)
+        && (uid in get(/databases/$(database)/documents/meta/block).data.ids);
+    }
+    function num(v) { return v is number && v >= 0 && v <= 1000000; }
+    function validScore() {
+      let d = request.resource.data;
+      return d.name is string && d.name.size() >= 1 && d.name.size() <= 12
+        && num(d.hands) && num(d.sum) && num(d.best) && num(d.dn) && num(d.dsum) && num(d.dbest)
+        && d.sum <= d.hands * 100 && d.dsum <= d.dn * 100;
+    }
+
+    // settings everyone reads; only the admin changes them
+    match /meta/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    // the readable access code lives here: admin only
+    match /secret/{id} { allow read, write: if isAdmin(); }
+    // a player becomes a member by sending the current access code; the server compares it
+    match /members/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['code', 'name', 'at'])
+        && hasSecret() && request.resource.data.code == secretCode();
+      allow delete: if isAdmin();
+    }
+    // scores: everyone reads (live ranking); a member writes only their own; the admin manages all
+    match /scores/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validScore());
+      allow delete: if isAdmin();
+    }
+  }
+}
