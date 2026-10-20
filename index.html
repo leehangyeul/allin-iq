@@ -587,7 +587,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610191058";
+window.HGQ_WEB=true;window.APP_VERSION="202610201811";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1839,7 +1839,6 @@ function joinScreen(){
     if(!name){err("닉네임을 입력해 주세요.");return}
     const b=$("jgo");b.disabled=true;const h=await accHash(ACC.salt,code);b.disabled=false;
     if(!h||h!==ACC.h){ACC.tries++;if(ACC.tries>=5){ACC.tries=0;ACC.until=Date.now()+30000;err("5번 틀렸어요. 30초 뒤에 다시 시도해 주세요.")}else err("접속 코드가 맞지 않아요.");return}
-    if(window.HGQ_WEB&&LB.db&&LB.uid){b.disabled=true;try{await LB.db.doc("members/"+LB.uid).set({code,name,at:Date.now()})}catch(e){b.disabled=false;err("서버에서 코드를 확인하지 못했어요. 코드를 다시 확인해 주세요.");return}b.disabled=false;LB.writeFail=false}
     ACC.tries=0;lsSet("hgq-acc",h);MYNAME=name;lsSet("hgq-name",name);ACC.sig=null;lbPush();
     const fn=ACC.pending;ACC.pending=null;(fn||menu)();};
   setTimeout(()=>{try{$("jc").focus()}catch(e){}},50);
@@ -2169,7 +2168,9 @@ function adminRender(){
    ${accAdminHTML()}
    <div class="lb"><div class="lbh"><b>초기화</b></div>${reset}</div>
    <div class="lb"><div class="lbh"><b>공유·보안 설정</b></div><ul class="sec">
-     <li>링크를 받은 사람 누구나 열 수 있지만, 접속 코드와 닉네임을 입력해야 게임을 할 수 있어요. 코드는 서버에서 확인해요.</li>
+     <li>링크를 받은 사람은 접속 코드·닉네임·비밀번호로 가입해야 게임을 할 수 있어요. 코드는 서버에서 확인해요.</li>
+     <li>닉네임은 한 사람만 쓸 수 있고 바꿀 수 없어요. 다른 기기에서도 같은 닉네임과 비밀번호로 이어서 해요.</li>
+     <li>비밀번호를 잊은 플레이어는 플레이어 관리에서 '비밀번호 초기화'를 눌러 받은 6자리 확인 코드를 알려 주면 돼요.</li>
      <li>코드를 바꾸면 이미 들어온 사람도 새 코드를 다시 입력해야 하고, 그 전까지는 점수가 저장되지 않아요.</li>
      <li>관리자는 등록된 구글 계정으로 로그인한 사람만 될 수 있어요. 순위·설정·차단은 서버 규칙으로 관리자만 바꿀 수 있어요.</li>
      <li>플레이어 화면에서는 우클릭·복사·드래그·저장·인쇄·소스보기 단축키를 막아 두었어요.</li></ul></div>
@@ -2225,7 +2226,7 @@ function menu(){
   $("go").onclick=()=>gateGo(()=>start(0));
   $("go2").onclick=()=>gateGo(()=>drillStart());
   if(window.HGQ_AUTH){const p=$("panel");const a=document.createElement("div");a.className="admrow";
-    a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:`<button class="lnk" id="admIn">관리자 로그인</button>`;p.appendChild(a);
+    a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:window.HGQ_AUTH.anon?`<button class="lnk" id="admIn">관리자 로그인</button>`:"";if(a.innerHTML)p.appendChild(a);
     const i=$("admIn");if(i)i.onclick=()=>window.HGQ_AUTH.admin();const o=$("admOut");if(o)o.onclick=()=>window.HGQ_AUTH.out();}
   const rn=$("rename");if(rn)rn.onclick=()=>nameScreen(()=>menu());
   lbRender();
@@ -2307,6 +2308,7 @@ function final(){
 menu();
 lbInit();
 </script>
+<script src="webgate.js?v=202610201811"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy

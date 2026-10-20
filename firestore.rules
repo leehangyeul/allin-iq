@@ -8,11 +8,21 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email_verified == true
         && request.auth.token.email in ['17gyeul@gmail.com'];
     }
+    // a player account = nickname + password (Firebase email/password with an internal address)
+    function isPlayer() {
+      return signedIn() && request.auth.token.email is string
+        && request.auth.token.email.matches('^p[0-9a-f]{32}@players[.]allin-iq[.]app$');
+    }
     function hasSecret() { return exists(/databases/$(database)/documents/secret/access); }
     function secretCode() { return get(/databases/$(database)/documents/secret/access).data.code; }
+    function validName(n) { return n is string && n.size() >= 1 && n.size() <= 12 && n.matches('^[^/]+$'); }
+    function nameDoc(n) { return /databases/$(database)/documents/names/$(n.lower()); }
+    // this nickname belongs to that uid
+    function owns(n, uid) { return validName(n) && exists(nameDoc(n)) && get(nameDoc(n)).data.uid == uid; }
+    function member(uid) { return get(/databases/$(database)/documents/members/$(uid)).data; }
     function isMember(uid) {
       return hasSecret() && exists(/databases/$(database)/documents/members/$(uid))
-        && get(/databases/$(database)/documents/members/$(uid)).data.code == secretCode();
+        && member(uid).code == secretCode();
     }
     function blocked(uid) {
       return exists(/databases/$(database)/documents/meta/block)
@@ -25,25 +35,57 @@ service cloud.firestore {
         && num(d.hands) && num(d.sum) && num(d.best) && num(d.dn) && num(d.dsum) && num(d.dbest)
         && d.sum <= d.hands * 100 && d.dsum <= d.dn * 100;
     }
+    function resetCode(key) { return get(/databases/$(database)/documents/secret/$('rs_' + key)).data.t; }
 
     // settings everyone reads; only the admin changes them
     match /meta/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
-    // the readable access code lives here: admin only
+    // the readable access code and one-time reset codes: admin only
     match /secret/{id} { allow read, write: if isAdmin(); }
-    // a player becomes a member by sending the current access code; the server compares it
-    match /members/{uid} {
-      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
-      allow create, update: if signedIn() && request.auth.uid == uid
-        && request.resource.data.keys().hasOnly(['code', 'name', 'at'])
-        && hasSecret() && request.resource.data.code == secretCode();
+
+    // nickname registry: one document per nickname, so a nickname can be taken only once
+    match /names/{key} {
+      allow read: if signedIn();
+      allow create: if (isPlayer() || isAdmin())
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'gen', 'at'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.gen == 0
+        && validName(request.resource.data.name) && request.resource.data.name.lower() == key;
+      // after an admin reset: the player proves the one-time code and takes the nickname to the new account
+      allow update: if isAdmin() || (isPlayer()
+        && resource.data.reset == true
+        && !blocked(resource.data.uid)
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'gen', 'at', 'prev', 'claim'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name == resource.data.name
+        && request.resource.data.gen == resource.data.gen + 1
+        && request.resource.data.prev == resource.data.uid
+        && exists(/databases/$(database)/documents/secret/$('rs_' + key))
+        && request.resource.data.claim == resetCode(key));
       allow delete: if isAdmin();
     }
-    // scores: everyone reads (live ranking); a member writes only their own; the admin manages all
+
+    // a player becomes a member by sending the current access code with the nickname they own
+    match /members/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isPlayer() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['code', 'name', 'at'])
+        && hasSecret() && request.resource.data.code == secretCode()
+        && owns(request.resource.data.name, uid);
+      allow delete: if isAdmin();
+    }
+
+    // scores: everyone reads (live ranking); a member writes only their own row under their own nickname
     match /scores/{uid} {
       allow read: if signedIn();
       allow create, update: if isAdmin()
-        || (signedIn() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validScore());
-      allow delete: if isAdmin();
+        || (isPlayer() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validScore()
+            && request.resource.data.name == member(uid).name && owns(request.resource.data.name, uid));
+      // the admin, or the new account moving its own record after a password reset
+      allow delete: if isAdmin()
+        || (isPlayer() && resource.data.name is string && validName(resource.data.name)
+            && exists(nameDoc(resource.data.name))
+            && get(nameDoc(resource.data.name)).data.uid == request.auth.uid
+            && get(nameDoc(resource.data.name)).data.prev == uid);
     }
   }
 }
