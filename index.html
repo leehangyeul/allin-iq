@@ -587,7 +587,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610201811";
+window.HGQ_WEB=true;window.APP_VERSION="202610202126";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -948,7 +948,7 @@ function tierOf(avg,n){const C=TIER_CFG;if(!n||n<C.min)return null;const i=C.lis
 function tierGuideHTML(){
   const L=TIER_CFG.list,n=L.length;
   const rows=L.map((x,i)=>({x,i,hi:i===0?100:L[i-1][0]-1})).reverse().map((r,k)=>`<li><span class="tgn">${k+1}</span><span class="tier ${tierCls(r.i,n)}">${esc(r.x[1])}</span><span class="tge">${esc(r.x[2])}</span><span class="tgr">${r.x[0]}${r.i===0?"점 이상":`~${r.hi}점`}</span>${r.x[3]?`<span class="tgd">${esc(r.x[3])}</span>`:""}</li>`).join("");
-  return `<details class="tguide"><summary>등급 기준</summary><ul>${rows}</ul><p class="lbs">평균 점수로 정해지고, ${TIER_CFG.min}판부터 표시돼요.</p></details>`;
+  return `<details class="tguide"><summary>등급 기준</summary><ul>${rows}</ul><p class="lbs">평균 점수로 정해지고, ${TIER_CFG.min}판부터 표시돼요. 종합 등급은 핸드 퀴즈와 오픈 연습을 각각 ${ALL_MIN}판 이상 풀어야 나와요.</p></details>`;
 }
 function tierTag(avg,n,big){const t=tierOf(avg,n);return t?`<span class="tier ${t.cls}${big?" big":""}">${t.name}</span>`:`<span class="tier t0${big?" big":""}">측정 중</span>`}
 function lab(o,k){const x=o.find(x=>x[0]===k);return x?x[1]:k}
@@ -1972,12 +1972,15 @@ async function lbPush(){
   LB.pushing=false;
 }
 // one record → the numbers a tab ranks by; "all" pools every scored round from both modes
+// overall score/grade only once both modes have ALL_MIN rounds each
+const ALL_MIN=5;
+function allReady(hn,dn){return hn>=ALL_MIN&&dn>=ALL_MIN}
 function lbPick(r,tab){
   const hn=+r.hands||0,dn=+r.dn||0;
   if(tab==="hand")return{n:hn,avg:+r.avg||0,best:+r.best||0};
   if(tab==="drill")return{n:dn,avg:+r.davg||0,best:+r.dbest||0};
   const hs=r.sum!=null?+r.sum||0:(+r.avg||0)*hn,ds=r.dsum!=null?+r.dsum||0:(+r.davg||0)*dn,n=hn+dn;
-  return{n,avg:n?Math.round((hs+ds)/n*10)/10:0,best:Math.max(+r.best||0,+r.dbest||0)};
+  return{n,hn,dn,avg:n?Math.round((hs+ds)/n*10)/10:0,best:Math.max(+r.best||0,+r.dbest||0)};
 }
 function lbRowsFor(tab){
   const k={u:tab==="hand"?"핸드":tab==="drill"?"문제":"판"};
@@ -1988,8 +1991,8 @@ function lbRowsFor(tab){
     const v={id:p.by,name:c.name,...lbPick(c,tab),live:true};
     if(!cur||v.n>=cur.n)by.set(p.by,v);else cur.live=true});
   const rows=[...by.values()].filter(r=>r.n>0);
-  const MIN=5;
-  const ranked=rows.filter(r=>r.n>=MIN).sort((a,b)=>b.avg-a.avg||b.n-a.n),wait=rows.filter(r=>r.n<MIN).sort((a,b)=>b.n-a.n);
+  const MIN=5,ok=r=>tab==="all"?allReady(r.hn,r.dn):r.n>=MIN;
+  const ranked=rows.filter(ok).sort((a,b)=>b.avg-a.avg||b.n-a.n),wait=rows.filter(r=>!ok(r)).sort((a,b)=>b.n-a.n);
   return{ranked,wait,u:k.u,MIN};
 }
 function lbHTML(inAdmin){
@@ -1998,18 +2001,19 @@ function lbHTML(inAdmin){
   if(!LB.db)return `<div class="lb"><div class="lbh"><b>순위</b></div><p class="note" style="text-align:left">서버에 연결되면 함께 푸는 사람들의 순위가 여기에 보여요.</p></div>`;
   let {ranked,wait,u,MIN}=lbRowsFor(LB.tab);
   const ro=!LB.uid||LB.writeFail||LB.canWrite===false;
-  if(ro){const loc=LB.tab==="hand"?{n:STATS.n,sum:STATS.sum,best:STATS.best}:LB.tab==="drill"?{n:DSTATS.n,sum:DSTATS.sum,best:DSTATS.best}:{n:STATS.n+DSTATS.n,sum:STATS.sum+DSTATS.sum,best:Math.max(STATS.best,DSTATS.best)};
-    if(loc.n>0){const r={id:"__local",name:MYNAME||"나",n:loc.n,avg:Math.round(loc.sum/loc.n*10)/10,best:loc.best,local:true};
-      if(r.n>=MIN){wait=wait.filter(x=>x.id!==LB.uid);ranked=ranked.filter(x=>x.id!==LB.uid).concat([r]).sort((a,b)=>b.avg-a.avg||b.n-a.n)}else{ranked=ranked.filter(x=>x.id!==LB.uid);wait=wait.filter(x=>x.id!==LB.uid).concat([r])}}}
+  if(ro){const loc=LB.tab==="hand"?{n:STATS.n,sum:STATS.sum,best:STATS.best}:LB.tab==="drill"?{n:DSTATS.n,sum:DSTATS.sum,best:DSTATS.best}:{n:STATS.n+DSTATS.n,hn:STATS.n,dn:DSTATS.n,sum:STATS.sum+DSTATS.sum,best:Math.max(STATS.best,DSTATS.best)};
+    if(loc.n>0){const r={id:"__local",name:MYNAME||"나",n:loc.n,hn:loc.hn,dn:loc.dn,avg:Math.round(loc.sum/loc.n*10)/10,best:loc.best,local:true};
+      if(LB.tab==="all"?allReady(r.hn,r.dn):r.n>=MIN){wait=wait.filter(x=>x.id!==LB.uid);ranked=ranked.filter(x=>x.id!==LB.uid).concat([r]).sort((a,b)=>b.avg-a.avg||b.n-a.n)}else{ranked=ranked.filter(x=>x.id!==LB.uid);wait=wait.filter(x=>x.id!==LB.uid).concat([r])}}}
   const isMe=r=>r.local||(LB.uid&&r.id===LB.uid);
   const row=(r,i)=>`<li class="${isMe(r)?"me":""}"><span class="rk">${i===null?"-":i+1}</span><span class="nm">${r.live?`<i class="dot" title="접속 중"></i>`:""}${esc(r.name)}${isMe(r)?`<em>${r.local&&!LB.room?"나 · 이 기기만":"나"}</em>`:""}</span><span class="sc2"><span class="sct">${tierTag(r.avg,r.n)}<b>${Math.round(r.avg)}</b></span><small>${r.n}${u} · 연속 ${r.best}</small></span></li>`;
-  let body=ranked.length?`<ol class="lbl">${ranked.map((r,i)=>row(r,i)).join("")}</ol>`:`<p class="note" style="text-align:left">아직 순위에 오른 사람이 없어요. ${MIN}${u} 이상 풀면 순위에 올라요.</p>`;
-  if(wait.length)body+=`<p class="lbw">기록 쌓는 중 (${MIN}${u} 미만): ${wait.map(r=>`${esc(r.name)} ${r.n}${u}`).join(" · ")}</p>`;
+  let body=ranked.length?`<ol class="lbl">${ranked.map((r,i)=>row(r,i)).join("")}</ol>`:`<p class="note" style="text-align:left">아직 순위에 오른 사람이 없어요. ${LB.tab==="all"?`핸드 퀴즈와 오픈 연습을 각각 ${ALL_MIN}판 이상 풀면`:`${MIN}${u} 이상 풀면`} 순위에 올라요.</p>`;
+  if(wait.length)body+=LB.tab==="all"?`<p class="lbw">종합 측정 중 (핸드·연습 각 ${ALL_MIN}판 필요): ${wait.map(r=>`${esc(r.name)} 핸드 ${Math.min(r.hn||0,ALL_MIN)}/${ALL_MIN} · 연습 ${Math.min(r.dn||0,ALL_MIN)}/${ALL_MIN}`).join(" · ")}</p>`
+    :`<p class="lbw">기록 쌓는 중 (${MIN}${u} 미만): ${wait.map(r=>`${esc(r.name)} ${r.n}${u}`).join(" · ")}</p>`;
   const relayOnly=!LB.owner&&ro;
   const warn=relayOnly?`<p class="lbw">${LB.room?"내 점수는 지금 접속한 모두에게 실시간으로 보이고, 관리자가 접속해 있을 때 순위에 저장돼요.":"지금 접속 방식으로는 내 점수를 모두의 순위에 올릴 수 없어요. 관리자에게 이메일 초대를 요청해 주세요."}</p>`:"";
   const admin=LB.owner&&!inAdmin?`<button class="ghost adb" id="adGo">관리자 페이지</button>`:"";
   return `<div class="lb" id="lbbox"><div class="lbh"><b>순위</b><div class="tabs2"><button data-t="all" class="${LB.tab==="all"?"on":""}">종합</button><button data-t="hand" class="${LB.tab==="hand"?"on":""}">핸드 퀴즈</button><button data-t="drill" class="${LB.tab==="drill"?"on":""}">오픈 연습</button></div></div>
-   <p class="lbs">${LB.room||window.HGQ_WEB?`<span class="livetag"><i class="dot"></i>실시간</span> `:""}${LB.tab==="all"?"핸드·연습 합산 ":""}평균 점수 순 · ${MIN}${u} 이상부터 순위${LB.peers.length?` · 지금 ${LB.peers.length+1}명 접속`:""}</p>${body}${warn}${tierGuideHTML()}${LB.msg&&!inAdmin?`<p class="note">${esc(LB.msg)}</p>`:""}${admin}</div>`;
+   <p class="lbs">${LB.room||window.HGQ_WEB?`<span class="livetag"><i class="dot"></i>실시간</span> `:""}${LB.tab==="all"?`핸드·연습 합산 평균 순 · 각각 ${ALL_MIN}판 이상부터 순위`:`평균 점수 순 · ${MIN}${u} 이상부터 순위`}${LB.peers.length?` · 지금 ${LB.peers.length+1}명 접속`:""}</p>${body}${warn}${tierGuideHTML()}${LB.msg&&!inAdmin?`<p class="note">${esc(LB.msg)}</p>`:""}${admin}</div>`;
 }
 function lbBind(){
   if(!document.querySelectorAll)return;
@@ -2206,14 +2210,16 @@ function nameScreen(next){
 function myCard(){
   const ha=STATS.n?Math.round(STATS.sum/STATS.n):0,da=DSTATS.n?Math.round(DSTATS.sum/DSTATS.n):0;
   // overall grade: every scored round from both modes, averaged together
-  const tn=STATS.n+DSTATS.n,ta=tn?(STATS.sum+DSTATS.sum)/tn:0;
-  return {ha,da,ht:tierTag(ha,STATS.n),dt:tierTag(da,DSTATS.n),tn,ta:Math.round(ta),tt:tierTag(ta,tn)};
+  // only measured once both modes have ALL_MIN rounds; one mode alone never gives an overall grade
+  const tn=STATS.n+DSTATS.n,ta=tn?(STATS.sum+DSTATS.sum)/tn:0,ready=allReady(STATS.n,DSTATS.n);
+  return {ha,da,ht:tierTag(ha,STATS.n),dt:tierTag(da,DSTATS.n),tn,ready,ta:Math.round(ta),tt:ready?tierTag(ta,tn):`<span class="tier t0">측정 중</span>`,
+    need:`핸드 ${Math.min(STATS.n,ALL_MIN)}/${ALL_MIN} · 연습 ${Math.min(DSTATS.n,ALL_MIN)}/${ALL_MIN}`};
 }
 function menu(){
   SCREEN="menu";
   $("top").innerHTML=`<div class="wm"><b>ALLIN <i>IQ</i></b><small>PLAY SMARTER · THINK DEEPER</small></div>`;
   $("prog").innerHTML="";
-  const m=myCard(),ov=`<span class="mov">${m.tt}<span class="movs">종합 <b>${m.tn?m.ta:"-"}</b></span></span>`,nm=MYNAME?`<span class="mn">${esc(MYNAME)}</span>${ov}<button class="lnk" id="rename">이름 변경</button>`:`<span class="mn dim">게스트</span>${ov}`;
+  const m=myCard(),ov=`<span class="mov">${m.tt}<span class="movs">${m.ready?`종합 <b>${m.ta}</b>`:m.need}</span></span>`,nm=MYNAME?`<span class="mn">${esc(MYNAME)}</span>${ov}<button class="lnk" id="rename">이름 변경</button>`:`<span class="mn dim">게스트</span>${ov}`;
   {
     $("stage").innerHTML="";
     $("panel").innerHTML=`<div class="mhd">${nm}</div>
@@ -2308,7 +2314,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610201811"></script>
+<script src="webgate.js?v=202610202126"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
