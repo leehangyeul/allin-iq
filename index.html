@@ -520,6 +520,11 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 .felt{background:radial-gradient(ellipse at 50% 38%,#25211A 0%,#17140F 55%,#0B0A08 100%);box-shadow:inset 0 0 0 2px rgba(212,175,124,.55),inset 0 0 0 7px rgba(212,175,124,.08),inset 0 0 50px rgba(0,0,0,.6)}
 .rail{background:linear-gradient(160deg,#2B2519,#121010);box-shadow:0 20px 44px rgba(0,0,0,.7),inset 0 0 0 1px rgba(212,175,124,.45)}
 .pot{color:#EAD3AE}.pot small{color:#A39C8E;letter-spacing:.2em}.seat .sc{color:#7C756A}.seat .fd{color:#4E4A43}
+/* other seats: readable name plates on the felt */
+.seat:not(.vil){gap:1px;padding:4px 9px 3px;border-radius:10px;background:rgba(7,10,17,.82);border:1px solid #2A3550}
+.seat:not(.vil) .sc{font-size:13px;font-weight:700;color:#DDE2EA;letter-spacing:.02em}
+.seat:not(.vil) .fd{font-size:11px;font-weight:600;color:#8E97A8}
+.seat.wt{border-color:#5A4B32}.seat.wt .fd{color:#F0D7AE!important}
 .hplate{background:#0E0C09;border:1px solid #D4AF7C;box-shadow:0 0 0 3px rgba(212,175,124,.12)}.hplate .hst{color:#D4AF7C}
 .bet{background:rgba(0,0,0,.6);color:#EAD3AE}
 .dp{background:transparent;color:#D4AF7C;box-shadow:inset 0 0 0 1px rgba(212,175,124,.5)}.turn{color:#D4AF7C}
@@ -606,7 +611,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610212353";
+window.HGQ_WEB=true;window.APP_VERSION="202610212359";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2370,7 +2375,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610212353"></script>
+<script src="webgate.js?v=202610212359"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
