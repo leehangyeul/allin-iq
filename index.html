@@ -88,6 +88,25 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 /* sheet */
 .panel{background:var(--sheet);border:1px solid var(--line);border-radius:22px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px}
 .alh{display:flex;align-items:baseline;justify-content:space-between}
+.qbox{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:#14120E;border:1px solid #5A4B32}
+.qtop{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.qmeta{font-size:12px;color:#A39C8E}.qmeta b{font-family:var(--mono);color:#EAD3AE;font-weight:600}
+.qq{margin:0;font-size:19px;line-height:1.45;font-weight:800;color:#F8F9FB;text-wrap:balance}
+.qq .qv{color:#FFB199}.qq .qh{color:#F0D7AE}.qq .num{color:#F0D7AE}
+.qsub{display:block;margin-top:4px;font-size:12px;font-weight:500;color:#A39C8E}
+.qlog{display:flex;flex-direction:column;gap:6px}.qlt{font-size:11px;font-weight:700;letter-spacing:.1em;color:#7C756A}
+.qlog .ar{font-size:14px}
+.btns{transition:opacity .25s}.btns.wait{opacity:.35;pointer-events:none}
+.seat.wt .fd{color:#9AA3B5!important;font-weight:700}
+.hplate .yt{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;background:#F0D7AE;color:#0B1220}
+.tbl.anim .seat.sq{animation:seatturn .6s ease var(--d) both}
+.tbl.anim .seat.sq .fd,.tbl.anim .seat.sq .act,.tbl.anim .bet.sq{animation:popin .3s ease var(--d) both}
+.tbl.anim .hplate{animation:heroturn 1.4s ease var(--dh) both}
+.tbl.anim .hplate .yt{animation:popin .3s ease var(--dh) both}
+@keyframes seatturn{0%{filter:none}40%{filter:drop-shadow(0 0 10px rgba(240,215,174,.9)) brightness(1.35)}100%{filter:none}}
+@keyframes popin{from{opacity:0}to{opacity:1}}
+@keyframes heroturn{0%{box-shadow:0 0 0 0 rgba(240,215,174,0)}45%{box-shadow:0 0 0 9px rgba(240,215,174,.4)}100%{box-shadow:0 0 0 3px rgba(212,175,124,.12)}}
+@media (prefers-reduced-motion:reduce){.tbl.anim *{animation:none!important}}
 .als{font-size:16px;font-weight:700}
 .turn{font-size:12px;font-weight:700;color:var(--hero)}
 .steps2{display:flex;flex-direction:column;gap:6px}
@@ -587,7 +606,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610202126";
+window.HGQ_WEB=true;window.APP_VERSION="202610212353";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1026,9 +1045,17 @@ function btnLabel(c,k,l){
   if(k==="raise"){const t=raiseTo(c);const allin=c.pre?t>=r1(G.hs+G.hIn):t>=G.hs;return[allin?"올인":l,allin?`${G.hs}BB`:(/BB/.test(l)?"":`${t}BB까지`)]}
   return[l,""];
 }
+// buttons as the hero sees them: every option that puts the hero all-in is one 올인 button
+function optView(c){const out=[];
+  c.o.forEach(([k,l])=>{const [m,sub]=btnLabel(c,k,l);const g=m==="올인"&&out.find(x=>x.m==="올인");
+    if(g){g.keys.push(k);g.ls.push(l);return}out.push({k,l,m,sub,keys:[k],ls:[l]})});
+  return out}
+function mergedOF(c){const vw=optView(c);if(vw.every(x=>x.keys.length===1))return{o:c.o,f:c.f};
+  const f={};vw.forEach(x=>{f[x.k]=Math.round(x.keys.reduce((t,k)=>t+(+c.f[k]||0),0)*10)/10});
+  return{o:vw.map(x=>[x.k,x.keys.length>1?`올인 (${x.ls.join(" · ")})`:x.l]),f}}
 function choose(k){
-  const c=G.sub||G.cur;
-  G.dec.push({label:c.label,o:c.o,f:c.f,n:c.n,a:c.a,k,si,pot:G.pot,facing:c.facing||0,hs0:G.hs,vIdx:G.V.map((v,i)=>v.out?-1:i).filter(i=>i>=0)});
+  const c=G.sub||G.cur;const mo=mergedOF(c);
+  G.dec.push({label:c.label,o:mo.o,f:mo.f,n:c.n,a:c.a,k,si,pot:G.pot,facing:c.facing||0,hs0:G.hs,vIdx:G.V.map((v,i)=>v.out?-1:i).filter(i=>i>=0)});
   if(k==="fold"){G.ended="fold";return finish()}
   if(c.pre){
     if(k==="call"){hpay(c.facing===0?1-G.hIn:c.facing)}
@@ -1088,28 +1115,38 @@ function shortAct(va){const m=/(올인|오버벳|베팅|레이즈|스퀴즈|[345
 function tableHTML(o){
   let out=`<div class="rail" style="left:${px(30)};top:${py(35)};width:${px(330)};height:${py(490)}"><div class="felt"></div></div>`;
   o.seats.forEach(st=>{const d=st.dealer?`<i class="dbt" aria-label="딜러">D</i>`:"";
-    if(st.bet>0){const [bx,by]=BETXY[st.i];out+=`<span class="bet" data-sx="${seatX(st.x)}" data-sy="${st.y}" style="left:${px(bx)};top:${py(by)}"><i></i>${st.bet}BB</span>`}
-    if(st.vil)out+=`<div class="seat vil ${st.out?"out":""}" style="left:${px(seatX(st.x))};top:${py(st.y)}"><span class="tagv">${st.lbl}</span><span class="sc">${st.p}${d}</span><span class="stv">${st.stack}</span>${st.act?`<span class="act ${/체크|콜/.test(st.act)?"soft":""}">${st.act}</span>`:""}</div>`;
-    else out+=`<div class="seat" style="left:${px(seatX(st.x))};top:${py(st.y)}"><span class="sc">${st.p}${d}</span>${st.note?`<span class="fd">${st.note}</span>`:""}</div>`});
+    const sq=st.d!=null?` sq" data-d="1`:"",dv=st.d!=null?`;--d:${st.d}ms`:"";
+    if(st.bet>0){const [bx,by]=BETXY[st.i];out+=`<span class="bet${st.wait?"":sq}" data-sx="${seatX(st.x)}" data-sy="${st.y}" style="left:${px(bx)};top:${py(by)}${st.wait?"":dv}"><i></i>${st.bet}BB</span>`}
+    if(st.vil)out+=`<div class="seat vil ${st.out?"out":""}${sq}" style="left:${px(seatX(st.x))};top:${py(st.y)}${dv}"><span class="tagv">${st.lbl}</span><span class="sc">${st.p}${d}</span><span class="stv">${st.stack}</span>${st.act?`<span class="act ${/체크|콜/.test(st.act)?"soft":""}">${st.act}</span>`:""}</div>`;
+    else out+=`<div class="seat${st.wait?" wt":""}${sq}" style="left:${px(seatX(st.x))};top:${py(st.y)}${dv}"><span class="sc">${st.p}${d}</span>${st.note?`<span class="fd">${st.note}</span>`:""}</div>`});
   out+=`<span class="pot" style="left:50%;top:${py(206)}"><small>팟</small>${o.pot}BB</span>`;
   out+=`<div class="board" style="left:50%;top:${py(290)}">${o.board}</div>`;
   if(o.acts&&o.acts.length)out+=`<div class="astrip" style="left:50%;top:${py(330)}">${o.acts.join("")}</div>`;
   out+=`<div class="hole" style="left:50%;top:${py(460)}">${o.hole}</div>`;
-  out+=`<div class="hplate" style="left:50%;top:${py(536)}"><span class="tagh">히어로 ${o.me}</span>${o.heroDealer?`<i class="dbt" aria-label="딜러">D</i>`:""}<span class="sth">${o.hs}<small>BB</small></span>${o.hst?`<span class="hst">${o.hst}</span>`:""}</div>`;
-  return `<div class="tbl">${out}</div>`;
+  out+=`<div class="hplate" style="left:50%;top:${py(536)}"><span class="tagh">히어로 ${o.me}</span>${o.heroDealer?`<i class="dbt" aria-label="딜러">D</i>`:""}<span class="sth">${o.hs}<small>BB</small></span>${o.hst?`<span class="hst">${o.hst}</span>`:""}${o.turn?`<span class="yt">내 차례</span>`:""}</div>`;
+  return `<div class="tbl" style="--dh:${o.dh||0}ms">${out}</div>`;
 }
 function stageHTML(k,showNew){
   const h=order[hi],c=G.sub||G.cur||{};
   const seats=seatOrder(h.me),list=[],vs=[];
-  seats.forEach((p,i)=>{if(i===0)return;const [x,y]=seatXY(i);const v=G.V.find(v=>v.pos===p);
+  const pre=!!c.pre&&!G.ended,hI=POS.indexOf(h.me);
+  // the hero's first preflop decision: seats after the hero have not acted yet; once the hero has acted, the whole ring has
+  const first=pre&&!heroActed(c.a);
+  // action order for this street: preflop from UTG round the table to the hero, postflop the villains in the order they acted
+  const D={};let t=250;
+  if(pre)(first?POS.slice(0,hI):POS.filter(p=>p!==h.me)).forEach(p=>{const v=G.V.find(v=>v.pos===p);D[p]=t;t+=v?650:200});
+  else if(!G.ended)(c.a||"").split(" → ").forEach(seg=>{const v=vByLbl(seg);if(v&&!v.out&&D[v.pos]==null){D[v.pos]=t;t+=650}});
+  G.animT=t;
+  seats.forEach((p,i)=>{if(i===0)return;const [x,y]=seatXY(i);const v=G.V.find(v=>v.pos===p);const d=D[p];
     if(v){vs.push(v);const va=G.ended?"":vAct(c.a||"",v);const bet=G.ended||v.out?0:(c.pre?v.inn:(c.inMap||{})[v.lbl]||0);
-      list.push({p,x,y,i,vil:true,out:v.out,lbl:v.lbl,act:v.out?"":shortAct(va),bet,stack:v.out?"폴드":v.st+"BB",dealer:p==="BTN"})}
-    else list.push({p,x,y,i,note:"폴드",dealer:p==="BTN"})});
+      list.push({p,x,y,i,d,vil:true,out:v.out,lbl:v.lbl,act:v.out?"":shortAct(va),bet,stack:v.out?"폴드":v.st+"BB",dealer:p==="BTN"})}
+    else if(first&&POS.indexOf(p)>hI)list.push({p,x,y,i,note:"대기",wait:true,bet:p==="SB"?0.5:p==="BB"?1:0,dealer:p==="BTN"});
+    else list.push({p,x,y,i,d,note:"폴드",dealer:p==="BTN"})});
   const acts=[];
   const b=boardUpTo(h,k),newN=k>0?h.s[k].b.length:0;
   const board=[0,1,2,3,4].map(i=>b[i]?bigCard(b[i],showNew&&k>0&&i>=b.length-newN?"new":""):`<span class="pc empty"></span>`).join("");
   const hst=b.length>=3?(strengthText(h.hand,b)||"").split(" · ")[0].replace(/\s*\(.*\)$/,""):"";
-  return tableHTML({seats:list,pot:G.pot,board,acts,hole:bigCard(h.hand[0],"hc")+bigCard(h.hand[1],"hc"),me:h.me,heroDealer:h.me==="BTN",hs:G.hs,hst});
+  return tableHTML({seats:list,pot:G.pot,board,acts,hole:bigCard(h.hand[0],"hc")+bigCard(h.hand[1],"hc"),me:h.me,heroDealer:h.me==="BTN",hs:G.hs,hst,turn:!G.ended,dh:G.animT});
 }
 function showdown(){
   const h=order[hi],fb=fullBoard(h);if(fb.length<5)return null;
@@ -2245,14 +2282,33 @@ function render(){
   bindBack();
   $("prog").innerHTML=progHTML();
   $("stage").innerHTML=stageHTML(si,!G.sub);fixBets();
-  const heroFirst=c.o[0][0]==="check";
-  const n=c.o.length;
+  // replay the order of play once per decision (not on a re-render), buttons wake up when it reaches the hero
+  const key=STATS.n+":"+hi+":"+si+":"+(G.sub?1:0);let rm=false;try{rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
+  const anim=key!==G.ak&&!rm&&G.animT>300;G.ak=key;
+  const vw=optView(c),n=vw.length;
   $("panel").innerHTML=`
-   <div class="alh"><span class="als">${c.label}</span><span class="turn">${heroFirst?"히어로 베팅 기회":"히어로 차례"}</span></div>
-   ${actLog(c.a)}
-   <div class="btns n${n}">${c.o.map(([k,l])=>{const [m,sub]=btnLabel(c,k,l);return `<button class="b ${btnCls(k,m)}" data-k="${k}"><span class="bm">${m}</span>${sub?`<span class="bs">${sub}</span>`:""}</button>`}).join("")}</div>
+   <div class="qbox"><div class="qtop"><span class="als">${c.label}</span><span class="qmeta">팟 <b>${G.pot}BB</b> · 내 스택 <b>${G.hs}BB</b></span></div><p class="qq">${qText(h,c)}</p></div>
+   <div class="qlog"><span class="qlt">진행 순서</span>${actLog(c.a)}</div>
+   <div class="btns n${n}${anim?" wait":""}" id="btnrow">${vw.map(x=>`<button class="b ${btnCls(x.k,x.m)}" data-k="${x.k}"><span class="bm">${x.m}</span>${x.sub?`<span class="bs">${x.sub}</span>`:""}</button>`).join("")}</div>
    <p class="note">점수와 해설은 핸드가 끝나면 한꺼번에 공개돼요. 히어로가 베팅·레이즈하면 빌런은 콜해요.</p>`;
   $("panel").querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>choose(b.dataset.k));
+  if(anim){const tb=document.querySelector&&document.querySelector("#stage .tbl"),br=$("btnrow");
+    const done=()=>{if(br)br.classList.remove("wait");if(tb)tb.classList.remove("anim")};
+    if(tb){tb.classList.add("anim");tb.onclick=done}const tm=setTimeout(()=>{if(br)br.classList.remove("wait")},G.animT);
+    if(br)br.onclick=e=>{if(br.classList.contains("wait")){e.stopPropagation();clearTimeout(tm);done()}}}
+}
+// the question in one sentence: who did what, and that it is now the hero's turn
+// the hero already acted on this street when a hero step comes before the last step
+function heroActed(a){const g=(a||"").split(" → ");return g.slice(0,-1).some(x=>x.trim().startsWith("히어로"))}
+function qText(h,c){
+  const vv=[];(c.a||"").split(" → ").forEach(seg=>{const s=seg.trim(),v=vByLbl(s);if(v&&!s.startsWith("히어로"))vv.push({v,t:s.slice(s.startsWith(v.lbl)?v.lbl.length:2).trim()})});
+  const last=vv.length?vv[vv.length-1]:null;
+  const said=vv.map(x=>`<b class="qv">${x.v.pos}</b> ${hl(x.t.replace(/\s*\(([\d.]+BB)\)/g," $1").replace(/\s*\([^)]*\)/g,""))}`).join(" · ");
+  const behind=c.pre&&!heroActed(c.a)?POS.slice(POS.indexOf(h.me)+1).map(p=>{const v=G.V.find(v=>v.pos===p);return v?`${p}(${v.lbl})`:p}):[];
+  const tail=behind.length?`<span class="qsub">뒤에 ${behind.join(" · ")}가 아직 남아 있어요</span>`:"";
+  if(last)return `${said} → <b class="qh">${h.me}</b> 히어로는 어떻게 할까요?${tail}`;
+  if(c.pre)return `${POS.indexOf(h.me)===0?"히어로가 가장 먼저 행동해요.":"앞에서 모두 폴드했어요."} <b class="qh">${h.me}</b> 히어로는 어떻게 할까요?${tail}`;
+  return `${c.label}에서 <b class="qh">히어로가 먼저</b> 행동해요. 체크할까요, 베팅할까요?`;
 }
 
 function finish(){
@@ -2314,7 +2370,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610202126"></script>
+<script src="webgate.js?v=202610212353"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
