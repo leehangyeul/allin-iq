@@ -89,6 +89,28 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 .panel{background:var(--sheet);border:1px solid var(--line);border-radius:22px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px}
 .alh{display:flex;align-items:baseline;justify-content:space-between}
 .qbox{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:#14120E;border:1px solid #5A4B32}
+.coachtile{grid-column:1/-1;min-height:0!important;flex-direction:row!important;align-items:center!important;flex-wrap:wrap;background:#0F1626;border:1px dashed #3A4766!important;color:var(--fg)}
+.coachtile.on{background:linear-gradient(160deg,#1B2640,#121A29);border:1px solid #D4AF7C!important}
+.coachtile .ts2{flex:1 1 140px;font-size:12px;color:var(--muted);line-height:1.5}
+.coachtile .tgo{align-self:center!important;flex:none;padding:0 14px;background:rgba(212,175,124,.16);color:#F0D7AE}
+.coc{border-radius:18px;background:#121A29;border:1px solid #263048;padding:16px;margin-bottom:12px;display:flex;flex-direction:column;gap:12px}
+.coc small{font-size:12px;color:var(--muted);font-weight:700}
+.coc.sum{background:linear-gradient(160deg,#1B2640,#121A29);border-color:#D4AF7C}.coc.sum>b{font-size:18px;line-height:1.5}
+.coc.weak{background:#1A1210;border-color:#5A3A2E}.coc.weak small{color:#F2B5A4}
+.coc.strong{background:#10261B;border-color:#1B4A33}.coc.strong small{color:#7FD4A6}
+.coc.lock{border-style:dashed}
+.cohd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.cohd>div{display:flex;flex-direction:column;gap:2px;min-width:0}.cohd b{font-size:17px;line-height:1.4;word-break:keep-all}
+.cosc{font-family:var(--mono);font-style:normal;font-size:26px;font-weight:700;color:#FF8A78}.coc.strong .cosc{color:#A7EBC6}
+.cob{display:grid;grid-template-columns:76px minmax(0,1fr) 40px;gap:8px;align-items:center;font-size:12px;color:#CFC7B5}
+.cob i{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;display:block}.cob u{display:block;height:100%;background:#E5604D}
+.coc.strong .cob u{background:#5FC892}.coc.sum .cob u,.coc.lock .cob u{background:#D4AF7C}
+.cob b{font-family:var(--mono);text-align:right;font-weight:600}
+.cosub{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.cobg{padding:3px 10px;border-radius:999px;font-weight:700;border:1px solid #3A4766;color:#F0D7AE;background:#1B2640}.cobg.up{background:#10261B;color:#A7EBC6;border-color:#1B4A33}.cobg.down{background:#2A1B16;color:#F2B5A4;border-color:#5A3A2E}
+.cowhy{margin:0;font-size:13px;line-height:1.7;color:#E6E1D6}
+.cot2{border-radius:12px;background:rgba(0,0,0,.25);padding:12px 14px;display:flex;flex-direction:column;gap:6px}.cot2 b{font-size:13px;color:#F0D7AE}.cot2 span{font-size:13px;line-height:1.6;color:#E6E1D6}
+.cot2 ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.6;color:#E6E1D6}
+.cof{font-size:14px}
 .qtm{display:flex;align-items:center;gap:8px;font-size:12px;color:#B9A27A}.qtm .tb{flex:1;height:6px;border-radius:999px;background:#2A2418;overflow:hidden}.qtm i{display:block;height:100%;width:100%;background:#D4AF7C}.qtm b{font-family:"JetBrains Mono",monospace;font-size:15px;min-width:22px;text-align:right;color:#F0D7AE}.qtm.low i{background:#E5604D}.qtm.low b{color:#FF8A78}
 .qtop{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .qmeta{font-size:12px;color:#A39C8E}.qmeta b{font-family:var(--mono);color:#EAD3AE;font-weight:600}
@@ -612,7 +634,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610221635";
+window.HGQ_WEB=true;window.APP_VERSION="202610221809";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1281,9 +1303,11 @@ function dOptions(sp){
   if(sp.kind==="pf10")return sp.spot==="rfi"?["f","j"]:["f","c"];
   const present=new Set(sp.g.split(""));return DORDER.split("").filter(l=>present.has(l));
 }
-function drillStart(){SCREEN="drill";DS=null;drillNext();window.scrollTo({top:0})}
+let DFILT=null;
+function dSpotF(){if(!DFILT)return dSpot();for(let k=0;k<80;k++){const sp=dSpot();if((!DFILT.pos||DFILT.pos.includes(sp.pos))&&(!DFILT.st||(sp.st>=DFILT.st[0]&&sp.st<=DFILT.st[1])))return sp}return dSpot()}
+function drillStart(f){SCREEN="drill";DFILT=f||null;DS=null;drillNext();window.scrollTo({top:0})}
 function drillNext(){
-  const sp=dSpot(),idx=dHand(sp);
+  const sp=dSpotF(),idx=dHand(sp);
   DS={sp,idx,hand:DH[idx],cards:dCards(idx),pick:null};
   drillRender();
 }
@@ -1308,7 +1332,7 @@ function dLog(sp){return `<div class="steps2">${dSituation(sp).split(" → ").ma
   return `<div class="ar"><span class="who ${v?"v":h?"h":"n"}">${v?"빌런":h?"히어로":"상황"}</span><span class="at2">${hl(t.replace(/^히어로\s*/,""))}</span></div>`}).join("")}</div>`}
 function drillRender(){
   const {sp}=DS;
-  $("top").innerHTML=topHTML(`프리플랍 오픈 연습 · #${DSTATS.n+1}`,`9인 · 히어로 ${sp.pos} · ${sp.spot==="rfi"?"첫 진입":sp.spot==="vs_open"?"BTN 오픈 대응":sp.op+" 올인 대응"}`,`${sp.st}BB`);
+  $("top").innerHTML=topHTML(`프리플랍 오픈 연습 · #${DSTATS.n+1}`,`9인 · 히어로 ${sp.pos} · ${sp.spot==="rfi"?"첫 진입":sp.spot==="vs_open"?"BTN 오픈 대응":sp.op+" 올인 대응"}${DFILT?" · 집중 연습":""}`,`${sp.st}BB`);
   bindBack();
   $("prog").innerHTML=`<div class="now" style="grid-column:1/-1">${dSource(sp)}</div>`;
   $("stage").innerHTML=dStage();fixBets();
@@ -1340,15 +1364,15 @@ function dExplain(sp,i){
   return `${who}이고, ${h} 핸드는 ${where}예요.`;
 }
 function drillAnswer(l){
-  if(DS.pick)return;qTimerStop();DS.pick=l;const {sp,idx}=DS;let score,verdict,detail="";
-  if(sp.kind==="chart"){const ans=sp.g[idx];score=l===ans?100:0;
+  if(DS.pick)return;qTimerStop();DS.pick=l;const {sp,idx}=DS;let score,verdict,detail="",pfv=null;
+  if(sp.kind==="chart"){const ans=sp.g[idx];score=l===ans?100:0;pfv=ans==="f"?100:0;
     verdict=score?`<div class="sdn good">차트와 일치 · ${dActLabel(sp,ans)}</div>`:`<div class="sdn bad">차트는 ${dActLabel(sp,ans)} · 히어로 ${dActLabel(sp,l)}</div>`;}
   else{const isR=sp.spot==="rfi",k=sp.op+">"+sp.pos;const f=isR?DRILL_PF10.jam[sp.pos][idx]:DRILL_PF10.call[k][idx];const ev=isR?DRILL_PF10.jam_ev[sp.pos][idx]:DRILL_PF10.call_ev[k][idx];
-    const go=isR?"j":"c",fr={f:1-f,[go]:f},best=f>=0.5?go:"f";score=strictPts({f:(1-f)*100,[go]:f*100},l);
+    pfv=(1-f)*100;const go=isR?"j":"c",fr={f:1-f,[go]:f},best=f>=0.5?go:"f";score=strictPts({f:(1-f)*100,[go]:f*100},l);
     const loss=Math.max(0,ev)-(l==="f"?0:ev);
     verdict=`<div class="sdn ${score>=90?"good":score>=50?"warn":"bad"}">${score}점 · 계산 근사 ${dActLabel(sp,go)} ${(f*100).toFixed(1)}% · 폴드 ${((1-f)*100).toFixed(1)}%</div>`;
     detail=`<p class="evl">EV: ${dActLabel(sp,go)} ${ev>=0?"+":""}${ev.toFixed(2)}BB · 폴드 0BB${loss>0.005?` · 이번 선택의 손실 ${loss.toFixed(2)}BB`:""}</p>`;}
-  DSTATS.n++;DSTATS.sum+=score;DSTATS.streak=score>=90?DSTATS.streak+1:0;DSTATS.best=Math.max(DSTATS.best,DSTATS.streak);dSave();lbPush();
+  DSTATS.n++;DSTATS.sum+=score;DSTATS.streak=score>=90?DSTATS.streak+1:0;DSTATS.best=Math.max(DSTATS.best,DSTATS.streak);dSave();lbPush();coachDrill(sp,l,score,pfv);
   $("panel").innerHTML=`<div class="alh"><span class="als">${DS.hand} · ${sp.st}BB ${sp.pos}</span><span class="turn" style="color:var(--muted)">히어로 ${dActLabel(sp,l)}</span></div>
    ${verdict}${(()=>{const dd=dDiff(sp,DS.idx);return `<p class="dlv"><span class="dlt d${dd.t}">난이도 ${DIFF_NAME[dd.t]}</span>${dd.why}</p>`})()}${detail}
    <p class="evl">${dExplain(sp,idx)}</p>
@@ -1358,6 +1382,193 @@ function drillAnswer(l){
    <div id="myrank" data-tab="drill">${lbMyRank("drill")}</div>
    <button class="cta" id="dnext">다음 문제</button>`;
   $("dnext").onclick=()=>{drillNext();window.scrollTo({top:0})};
+}
+
+
+// ================= 코치 보드: 두 게임의 기록에서 공통 약점·강점을 찾아요 =================
+// 기록은 이 기기에만 저장돼요. 문장은 GTO 원리만 쓰고, 숫자는 플레이어 본인의 기록에서만 가져와요.
+const COACH_MIN=50,COACH_KEEP=150,COACH_SAMP=5;
+function coachLoad(){try{const o=JSON.parse(localStorage.getItem("hgq-coach")||"null");if(o&&o.h&&o.d)return o}catch(e){}return{hn:0,dn:0,h:[],d:[]}}
+let CL=coachLoad();
+function coachSave(){try{localStorage.setItem("hgq-coach",JSON.stringify(CL))}catch(e){}}
+function coachClear(){CL={hn:0,dn:0,h:[],d:[]};coachSave()}
+// one record = one decision: p position, st starting stack, s street (0 = preflop), sc points, pf GTO fold % (null when folding is not an option), fo chose fold, to timed out
+function coachHand(h,sc){CL.hn++;const hi=CL.hn;
+  G.dec.forEach((d,i)=>{const hasF=d.o.some(x=>x[0]==="fold");
+    CL.h.push({i:hi,p:h.me,st:G.D,s:d.si,sc:sc[i],pf:hasF?(+d.f.fold||0):null,fo:d.k==="fold"?1:0,to:d.to?1:0})});
+  CL.h=CL.h.filter(r=>r.i>hi-COACH_KEEP);coachSave()}
+function coachDrill(sp,l,score,pf){CL.dn++;const di=CL.dn;
+  CL.d.push({i:di,p:sp.pos,st:sp.st,s:0,sc:score,pf:pf==null?null:Math.round(pf),fo:l==="f"?1:0,to:0});
+  CL.d=CL.d.filter(r=>r.i>di-COACH_KEEP);coachSave()}
+const COACH_GRP={UTG:"EP","UTG+1":"EP","UTG+2":"EP",MP:"EP",LJ:"MP",HJ:"MP",CO:"LP",BTN:"LP",SB:"BL",BB:"BL"};
+const COACH_POS={EP:["UTG","UTG+1","UTG+2","MP"],MP:["LJ","HJ"],LP:["CO","BTN"],BL:["SB","BB"]};
+const COACH_TXT={
+ "pos:EP":{short:"앞 포지션",w:"앞 포지션에서 기준이 흔들려요",s:"앞 포지션에서 레인지를 잘 지켜요",
+  why:"앞 자리는 뒤에 행동할 사람이 많아서 누군가 더 강한 핸드를 가질 확률이 높아요. 플랍 이후에도 먼저 행동해야 해서 에퀴티를 덜 실현하고, 같은 A나 K에 더 좋은 킥커를 가진 상대에게 도미네이트당하기 쉬워요. 그래서 GTO는 앞에서 레인지를 좁혀요.",
+  whys:"앞 자리의 좁은 레인지를 정확히 맞추고 있어요. 도미네이트당하기 쉬운 경계 핸드를 걸러내는 습관이 점수로 나와요.",
+  tips:["오픈 연습에서 앞 포지션만 20문제를 풀어 보세요. 경계 핸드(A9o, KTo, 작은 수티드 커넥터)가 자주 나와요.","앞 자리에서 망설여지는 핸드는 폴드로 시작해 보세요. 이 자리에서는 폴드가 틀릴 때보다 참여가 틀릴 때 손해가 커요.","핸드 퀴즈에서 앞 포지션 핸드가 나오면, 참여한 뒤 플랍에서 먼저 행동하는 불편함을 떠올려 보세요."]},
+ "pos:MP":{short:"중간 포지션",w:"중간 포지션에서 기준이 흔들려요",s:"중간 포지션 판단이 정확해요",
+  why:"LJ·HJ는 앞 자리보다 넓고 뒤 자리보다 좁은, 레인지가 한 칸씩 넓어지는 구간이에요. 뒤에 남은 사람이 줄어드는 만큼 참여하는 핸드가 조금씩 늘어나야 해요.",
+  whys:"한 칸씩 넓어지는 레인지의 경사를 잘 따라가고 있어요.",
+  tips:["오픈 연습에서 LJ와 HJ를 번갈아 풀어 보세요. 두 자리의 차이는 몇 개 안 되는 경계 핸드예요.","앞 자리에서 폴드한 핸드 중 어떤 것이 HJ에서 들어오는지 비교해 보세요.","애매한 수티드 핸드는 뒤에 남은 사람 수를 먼저 세어 보세요."]},
+ "pos:LP":{short:"뒤 포지션",w:"뒤 포지션에서 너무 좁게 참여해요",s:"뒤 포지션에서 넓게 여는 판단이 좋아요",
+  why:"CO와 BTN은 플랍 이후 마지막에 행동해서 에퀴티를 더 많이 실현하고, 뒤에 남은 사람이 적어 폴드로 바로 이기는 판(폴드 에퀴티)도 많아요. 그래서 GTO는 뒤 포지션에서 레인지를 크게 넓혀요. 너무 좁게 지키면 이 이점을 놓쳐요.",
+  whys:"BTN은 플랍 이후 모든 스트리트에서 마지막에 행동하고, 뒤에 블라인드 둘뿐이에요. 이 점을 살려 레인지 폭을 정확하게 맞추고 있어요.",
+  tips:["오픈 연습에서 CO와 BTN만 20문제를 풀어 보세요. 약한 에이스와 수티드 커넥터가 자주 나와요.","BTN에서는 \"블라인드 둘만 이기면 된다\"를 기준으로 생각해 보세요.","앞 자리에서 접던 핸드가 BTN에서는 들어오는 이유를 포지션으로 설명해 보세요."]},
+ "pos:BL":{short:"블라인드",w:"블라인드에서 기준이 흔들려요",s:"블라인드 판단이 정확해요",
+  why:"블라인드는 이미 돈을 넣어서 콜 오즈가 좋지만, 플랍 이후에 먼저 행동해서 에퀴티를 덜 실현해요. 두 가지가 부딪히는 자리라 핸드마다 답이 갈려요. 같은 핸드도 상대 오픈 위치와 스택에 따라 달라져요.",
+  whys:"좋은 콜 오즈와 불리한 포지션 사이의 균형을 잘 잡고 있어요.",
+  tips:["오픈 연습에서 SB와 BB만 20문제를 풀어 보세요.","BB는 콜 오즈가 좋은 대신 포지션이 없다는 점을 같이 떠올려 보세요.","SB에서는 림프와 레이즈 중 어느 쪽이 스택에 맞는지 확인해 보세요."]},
+ "stk:deep":{short:"깊은 스택",w:"스택이 깊을 때 기준이 흔들려요",s:"깊은 스택 판단이 좋아요",
+  why:"스택이 깊으면 핸드의 투기성(임플라이드 오즈)과 포지션의 가치가 커져요. 작은 페어와 수티드 커넥터는 값이 오르고, 포지션 없는 약한 핸드는 값이 내려가요.",
+  whys:"깊은 스택에서 핸드의 잠재력과 포지션을 함께 보고 있어요.",
+  tips:["오픈 연습에서 40BB 이상 차트만 골라 풀어 보세요.","수티드 커넥터가 어느 자리부터 들어오는지 확인해 보세요.","포지션이 없을 때는 같은 핸드의 값이 떨어진다는 점을 기억하세요."]},
+ "stk:mid":{short:"중간 스택",w:"중간 스택(20~39BB)에서 기준이 흔들려요",s:"중간 스택 판단이 좋아요",
+  why:"중간 스택에서는 3벳을 맞으면 SPR이 낮아져 거의 팟에 커밋돼요. 그래서 오픈할 수 있는 핸드와 3벳에 맞서 계속할 수 있는 핸드의 폭이 깊은 스택과 달라져요.",
+  whys:"3벳을 맞아도 계속할 수 있는 핸드를 잘 골라 오픈하고 있어요.",
+  tips:["오픈 연습에서 25BB 차트만 골라 풀어 보세요.","오픈한 뒤 3벳을 맞으면 어떻게 할지 먼저 정하고 오픈하세요.","핸드 퀴즈의 25~30BB 판에서 올인 버튼이 나오는 구간을 눈여겨보세요."]},
+ "stk:short":{short:"짧은 스택",w:"스택이 짧을 때 올인·콜 기준이 흐려져요",s:"짧은 스택에서 판단이 정확해요",
+  why:"스택이 짧을수록 콜 한 번이 팟의 대부분이라, 핸드의 에퀴티보다 폴드 에퀴티와 팟 오즈가 중요해져요. 레이즈 후 폴드보다 올인이 나은 구간이 생기고, 같은 핸드도 상대 올인 범위에 맞춰 콜 기준이 달라져요.",
+  whys:"폴드 에퀴티와 팟 오즈를 함께 계산해 올인·콜을 정확히 고르고 있어요.",
+  tips:["오픈 연습에서 10~15BB 문제만 20개 풀어 보세요.","올인할 때는 \"상대가 접는 경우 + 콜 받았을 때 에퀴티\"를 함께 떠올려 보세요.","상대 올인을 받을 때는 필요한 에퀴티(팟 오즈)를 먼저 계산해 보세요."]},
+ "pf:fold":{short:"폴드해야 하는 핸드",w:"폴드해야 할 때 참여해요",s:"버려야 할 핸드를 깔끔하게 버려요",
+  why:"GTO가 대부분 폴드하는 핸드로 참여하면, 도미네이트당하거나 포지션 없이 약한 에퀴티로 큰 팟을 만들게 돼요. \"A나 K가 있으니까\"가 가장 흔한 이유예요. 참여 과다는 장기적으로 가장 큰 손실이에요.",
+  whys:"참여하면 손해인 핸드를 잘 버려요. 장기적으로 가장 확실한 이득이에요.",
+  tips:["폴드가 정답인 핸드를 일부러 모아 보세요. 앞 포지션과 짧은 스택 문제에서 많이 나와요.","참여하기 전에 \"이 핸드를 가진 상대가 나를 이길 때 얼마나 잃나\"를 한 번 물어보세요.","어떤 포지션에서 가장 자주 참여해 버리는지 아래 포지션 점수와 같이 보세요."]},
+ "pf:play":{short:"참여해야 하는 핸드",w:"참여해야 할 때 접어요",s:"참여해야 할 때 주저하지 않아요",
+  why:"GTO가 자주 참여하는 핸드를 접으면 폴드 에퀴티와 에퀴티 실현, 블라인드 스틸 이득을 놓쳐요. 특히 뒤 포지션과 짧은 스택에서 이 비용이 커요.",
+  whys:"레인지 안쪽 핸드를 주저하지 않고 플레이해요.",
+  tips:["뒤 포지션(CO·BTN) 문제를 집중해서 풀어 보세요.","접으려는 핸드가 \"블라인드 둘만 이기면 되는 자리\"인지 먼저 확인하세요.","짧은 스택에서는 접는 것보다 올인이 나은 핸드가 많아요."]},
+ "post:1":{short:"플랍",w:"플랍 판단이 흔들려요",s:"플랍 판단이 좋아요",
+  why:"플랍에서는 레인지 우위와 보드 텍스처에 따라 베팅 빈도와 크기가 달라져요. 건조한 보드는 작은 크기로 자주, 연결된 보드는 크기를 키우고 빈도를 줄이는 게 기본 모양이에요.",
+  whys:"보드 텍스처에 맞춰 베팅과 체크를 잘 고르고 있어요.",
+  tips:["핸드 퀴즈에서 플랍 해설의 빈도 막대를 보고 \"체크가 얼마나 자주 나오나\"를 확인하세요.","보드가 건조한지 젖었는지부터 판단하세요.","내가 프리플랍 어그레서인지(레인지 우위가 있는지)를 먼저 확인하세요."]},
+ "post:2":{short:"턴",w:"턴 판단이 흔들려요",s:"턴 판단이 좋아요",
+  why:"턴에서는 레인지가 좁혀져서 강한 핸드와 블러프로 나뉘는 폴라라이즈 구성이 중요해요. 큰 베팅은 강한 핸드와 드로우로 채우고, 중간 핸드는 체크로 팟을 지켜요.",
+  whys:"턴에서 중간 핸드와 폴라라이즈 핸드를 잘 구분해요.",
+  tips:["핸드 퀴즈 턴 해설에서 체크가 정답인 핸드의 공통점을 찾아보세요.","큰 베팅을 하려면 블러프로 쓸 핸드가 있는지 먼저 생각하세요.","드로우가 완성되거나 빗나갈 카드를 미리 떠올리세요."]},
+ "post:3":{short:"리버",w:"리버 판단이 흔들려요",s:"리버 판단이 정확해요",
+  why:"리버는 드로우가 끝나서 쇼다운 가치와 블러프 비율 계산이 중심이에요. 콜할 때는 팟 오즈로 필요한 에퀴티를 따져 보고, 베팅할 때는 콜받는 핸드보다 약한 핸드와 블러프를 함께 섞어야 해요.",
+  whys:"팟 오즈 대비 필요한 에퀴티를 잘 따져서 리버 콜·폴드를 고르고 있어요.",
+  tips:["리버 콜 전에 필요한 에퀴티(= 콜 ÷ 최종 팟)를 계산해 보세요.","내 핸드가 쇼다운에서 이기는 상대 핸드가 베팅하는지 생각하세요.","핸드 퀴즈 리버 해설에서 폴드가 정답인 핸드를 모아 보세요."]}
+};
+const COACH_CATS=[
+ {id:"pos:EP",f:r=>r.s===0&&COACH_GRP[r.p]==="EP",l:"앞 포지션 (UTG~UTG+2)"},
+ {id:"pos:MP",f:r=>r.s===0&&COACH_GRP[r.p]==="MP",l:"중간 포지션 (LJ·HJ)"},
+ {id:"pos:LP",f:r=>r.s===0&&COACH_GRP[r.p]==="LP",l:"뒤 포지션 (CO·BTN)"},
+ {id:"pos:BL",f:r=>r.s===0&&COACH_GRP[r.p]==="BL",l:"블라인드 (SB·BB)"},
+ {id:"stk:deep",f:r=>r.s===0&&r.st>=40,l:"깊은 스택 (40BB 이상)"},
+ {id:"stk:mid",f:r=>r.s===0&&r.st>=20&&r.st<40,l:"중간 스택 (20~39BB)"},
+ {id:"stk:short",f:r=>r.s===0&&r.st<20,l:"짧은 스택 (20BB 미만)"},
+ {id:"pf:fold",f:r=>r.pf!=null&&r.pf>=60,l:"폴드해야 하는 핸드"},
+ {id:"pf:play",f:r=>r.pf!=null&&r.pf<=30,l:"참여해야 하는 핸드"},
+ {id:"post:1",f:r=>r.s===1,l:"플랍 (핸드 퀴즈)",only:"h"},
+ {id:"post:2",f:r=>r.s===2,l:"턴 (핸드 퀴즈)",only:"h"},
+ {id:"post:3",f:r=>r.s===3,l:"리버 (핸드 퀴즈)",only:"h"}
+];
+function coachAgg(rs){if(!rs.length)return{n:0,avg:0};return{n:rs.length,avg:rs.reduce((a,r)=>a+r.sc,0)/rs.length}}
+function coachWin(g,lo,hi){return CL[g].filter(r=>r.i>lo&&r.i<=hi)}
+function coachInfo(){
+  const nh=CL.hn,nd=CL.dn,ready=nh>=COACH_MIN&&nd>=COACH_MIN;
+  const out={nh,nd,ready,weak:[],strong:[]};if(!ready)return out;
+  const cur={h:coachWin("h",nh-COACH_MIN,nh),d:coachWin("d",nd-COACH_MIN,nd)};
+  const prev={h:coachWin("h",nh-2*COACH_MIN,nh-COACH_MIN),d:coachWin("d",nd-2*COACH_MIN,nd-COACH_MIN)};
+  const tot={h:coachAgg(cur.h),d:coachAgg(cur.d)};
+  out.tot=tot;out.timeouts=cur.h.filter(r=>r.to).length;
+  const rows=[];
+  COACH_CATS.forEach(c=>{
+    const a={h:coachAgg(cur.h.filter(c.f)),d:coachAgg(cur.d.filter(c.f))};
+    const pa={h:coachAgg(prev.h.filter(c.f)),d:coachAgg(prev.d.filter(c.f))};
+    const both=c.only!=="h"&&a.h.n>=COACH_SAMP&&a.d.n>=COACH_SAMP;
+    const gh=a.h.n>=COACH_SAMP?tot.h.avg-a.h.avg:null,gd=a.d.n>=COACH_SAMP?tot.d.avg-a.d.avg:null;
+    const ns=(c.only==="h"?a.h.n:a.h.n+a.d.n);
+    const avg=c.only==="h"?a.h.avg:(a.h.n+a.d.n?(a.h.avg*a.h.n+a.d.avg*a.d.n)/(a.h.n+a.d.n):0);
+    const pn=c.only==="h"?pa.h.n:pa.h.n+pa.d.n;
+    const pavg=pn?(c.only==="h"?pa.h.avg:(pa.h.avg*pa.h.n+pa.d.avg*pa.d.n)/pn):0;
+    const delta=pn>=COACH_SAMP&&ns>=COACH_SAMP?avg-pavg:null;
+    let gap=null,scope=null;
+    if(both){gap=(gh+gd)/2;scope=(gh>=3&&gd>=3)?"both":(gh<=-3&&gd<=-3)?"both":"mixed"}
+    else if(c.only==="h"&&gh!=null){gap=gh;scope="h"}
+    else if(gh!=null&&gd==null&&a.h.n>=8){gap=gh;scope="h"}
+    else if(gd!=null&&gh==null&&a.d.n>=8){gap=gd;scope="d"}
+    if(gap==null)return;
+    rows.push({id:c.id,l:c.l,a,avg,delta,gap,scope,gh,gd,only:c.only});
+  });
+  const st=d=>d==null?"base":d>=5?"up":d<=-5?"down":"same";
+  rows.forEach(r=>r.status=st(r.delta));
+  out.weak=rows.filter(r=>r.gap>=4&&r.avg<75&&r.scope!=="mixed").sort((x,y)=>{const bx=x.scope==="both"?1:0,by=y.scope==="both"?1:0;return by-bx||y.gap-x.gap}).slice(0,3);
+  out.strong=rows.filter(r=>r.gap<=-4&&r.avg>=75&&r.scope!=="mixed").sort((x,y)=>{const bx=x.scope==="both"?1:0,by=y.scope==="both"?1:0;return by-bx||x.gap-y.gap}).slice(0,2);
+  return out;
+}
+const COACH_ST={up:["개선됨","up"],same:["제자리","same"],down:["주의","down"],base:["첫 분석","base"]};
+function coachBars(r){const g=[["h","핸드 퀴즈"],["d","오픈 연습"]].filter(([k])=>r.a[k].n>0&&!(r.only==="h"&&k==="d"));
+  return `<div class="cob">${g.map(([k,t])=>{const v=Math.round(r.a[k].avg);return `<span>${t}</span><i><u style="width:${v}%"></u></i><b>${v}</b>`}).join("")}</div>`}
+function coachFocusBtn(id){
+  const [k,v]=id.split(":");
+  if(k==="pos")return `<button class="cta cof" data-cf="${id}">${esc(COACH_TXT[id].short)}만 오픈 연습하기</button>`;
+  if(id==="stk:deep")return `<button class="cta cof" data-cf="${id}">깊은 스택만 오픈 연습하기</button>`;
+  if(id==="stk:mid")return `<button class="cta cof" data-cf="${id}">중간 스택만 오픈 연습하기</button>`;
+  if(id==="stk:short")return `<button class="cta cof" data-cf="${id}">짧은 스택만 오픈 연습하기</button>`;
+  if(k==="post")return `<button class="cta cof" data-cf="${id}">핸드 퀴즈 하러 가기</button>`;
+  return `<button class="cta cof" data-cf="${id}">오픈 연습 하러 가기</button>`;
+}
+function coachFocus(id){
+  const [k,v]=id.split(":");
+  if(k==="pos")return drillStart({pos:COACH_POS[v]});
+  if(id==="stk:deep")return drillStart({st:[40,100]});
+  if(id==="stk:mid")return drillStart({st:[20,39]});
+  if(id==="stk:short")return drillStart({st:[1,19]});
+  if(k==="post")return start(0);
+  return drillStart();
+}
+function coachCard(w,i){
+  const T=COACH_TXT[w.id],S=COACH_ST[w.status];
+  const scope=w.scope==="both"?"두 게임 공통":w.scope==="h"?"핸드 퀴즈":"오픈 연습";
+  const dl=w.delta==null?"":` ${w.delta>0?"+":""}${Math.round(w.delta)}`;
+  const tips=w.status==="up"?`<div class="cot2"><b>잘 하고 있어요</b><span>지난 50판보다 점수가 올랐어요. 지금 연습 방식을 그대로 이어가 보세요.</span></div>`:
+   `<div class="cot2"><b>점수를 올리는 연습 방법</b><ol>${T.tips.map(t=>`<li>${esc(t)}</li>`).join("")}</ol></div>${coachFocusBtn(w.id)}`;
+  return `<div class="coc weak"><div class="cohd"><div><small>약점 ${i+1} · ${scope}</small><b>${esc(T.w)}</b></div><em class="cosc">${Math.round(w.avg)}</em></div>
+   ${coachBars(w)}<div class="cosub"><span class="cobg ${S[1]}">${S[0]}${dl}</span><span>${esc(w.l)}</span></div>
+   <p class="cowhy">${esc(T.why)}</p>${tips}</div>`;
+}
+function coachStrong(w,i){
+  const T=COACH_TXT[w.id];const scope=w.scope==="both"?"두 게임 공통":w.scope==="h"?"핸드 퀴즈":"오픈 연습";
+  return `<div class="coc strong"><div class="cohd"><div><small>강점 ${i+1} · ${scope}</small><b>${esc(T.s)}</b></div><em class="cosc">${Math.round(w.avg)}</em></div>
+   ${coachBars(w)}<div class="cosub"><span>${esc(w.l)}</span></div><p class="cowhy">${esc(T.whys)}</p></div>`;
+}
+function coachLockHTML(c){
+  const row=(t,n)=>`<span>${t}</span><i><u style="width:${Math.min(100,n/COACH_MIN*100)}%"></u></i><b>${Math.min(n,COACH_MIN)}/${COACH_MIN}</b>`;
+  return `<div class="coc lock"><div class="cohd"><div><small>잠겨 있어요</small><b>핸드 퀴즈와 오픈 연습을 각 ${COACH_MIN}판 하면 열려요</b></div></div>
+   <div class="cob">${row("핸드 퀴즈",c.nh)}${row("오픈 연습",c.nd)}</div>
+   <p class="cowhy">코치 보드는 두 게임에서 공통으로 약한 부분과 강한 부분을 GTO 원리로 설명해 줘요. 기록은 코치 보드가 생긴 뒤의 판부터 모여요.</p></div>`;
+}
+function coachSummary(c){
+  const W=c.weak[0],S=c.strong[0];
+  const line=W&&S?`${COACH_TXT[S.id].short}에서는 잘 맞추는데, ${COACH_TXT[W.id].short}에서는 기준이 흔들려요.`:W?`가장 먼저 손볼 곳은 ${COACH_TXT[W.id].short}이에요.`:S?`지금은 뚜렷한 약점이 없어요. ${COACH_TXT[S.id].short}이 특히 좋아요.`:"지금은 뚜렷하게 치우친 부분이 없어요. 고르게 잘 하고 있어요.";
+  return `<div class="coc sum"><small>코치 한 줄 요약</small><b>${esc(line)}</b>
+   <div class="cob"><span>핸드 퀴즈</span><i><u style="width:${Math.round(c.tot.h.avg)}%"></u></i><b>${Math.round(c.tot.h.avg)}</b><span>오픈 연습</span><i><u style="width:${Math.round(c.tot.d.avg)}%"></u></i><b>${Math.round(c.tot.d.avg)}</b></div>
+   <p class="cowhy">각 게임 최근 ${COACH_MIN}판 기준이에요.${c.timeouts>=5?` 핸드 퀴즈에서 시간 초과가 ${c.timeouts}번 있었어요. 20초 안에 기준을 떠올리는 연습도 필요해요.`:""}</p></div>`;
+}
+function coachScreen(){
+  SCREEN="coach";const c=coachInfo();
+  $("top").innerHTML=topHTML("코치 보드","핸드 퀴즈 · 오픈 연습 공통 분석","");bindBack();
+  $("prog").innerHTML="";$("stage").innerHTML="";
+  let h;
+  if(!c.ready)h=coachLockHTML(c);
+  else{
+    h=coachSummary(c);
+    h+=c.weak.length?c.weak.map(coachCard).join(""):`<div class="coc"><b>뚜렷한 약점이 아직 없어요</b><p class="cowhy">두 게임에서 같은 방향으로 크게 떨어지는 부분이 보이지 않아요. 판 수가 더 쌓이면 다시 분석해요.</p></div>`;
+    if(c.strong.length)h+=c.strong.map(coachStrong).join("");
+    h+=`<p class="note">문장은 GTO 원리만 쓰고, 숫자는 내 기록에서만 가져와요. 기록은 이 기기에 저장돼요.</p>`;
+  }
+  $("panel").innerHTML=h;
+  $("panel").querySelectorAll("[data-cf]").forEach(b=>b.onclick=()=>gateGo(()=>coachFocus(b.dataset.cf)));
+  window.scrollTo({top:0});
+}
+function coachTile(){
+  const c=coachInfo();
+  const sub=c.ready?(c.weak[0]?`지금 손볼 곳: ${COACH_TXT[c.weak[0].id].short}`:"분석 결과 보기"):`핸드 퀴즈 ${Math.min(c.nh,COACH_MIN)}/${COACH_MIN} · 오픈 연습 ${Math.min(c.nd,COACH_MIN)}/${COACH_MIN}`;
+  return `<button class="tile coachtile${c.ready?" on":""}" id="go3"><span class="tl">코치 보드</span><span class="ts2">${esc(sub)}</span><span class="tgo">${c.ready?"열기":"각 "+COACH_MIN+"판부터"}</span></button>`;
 }
 
 
@@ -1839,7 +2050,7 @@ function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
 let MYNAME=lsGet("hgq-name")||"";
 let SCREEN="menu";
-function clearLocal(){STATS={n:0,sum:0,streak:0,best:0};saveStats(STATS);DSTATS={n:0,sum:0,streak:0,best:0};dSave()}
+function clearLocal(){STATS={n:0,sum:0,streak:0,best:0};saveStats(STATS);DSTATS={n:0,sum:0,streak:0,best:0};dSave();coachClear()}
 // ---------- access code: the owner sets a code; a viewer types it with a nickname and plays ----------
 // Viewers only ever receive a salted hash of the code; the readable copy sits in an owner-only doc.
 const ACC={h:null,salt:"",at:0,ready:false,plain:"",pending:null,tries:0,until:0,sig:null,shown:false,msg:"",busy:false};
@@ -2283,6 +2494,7 @@ function menu(){
       <div class="tiles">
         <button class="tile tg" id="go"><span class="tl">핸드 퀴즈</span><span class="ts"><b>${STATS.n?m.ha:"-"}</b>${m.ht}</span><span class="tgo">${STATS.n?"이어서":"시작"}</span></button>
         <button class="tile tb" id="go2"><span class="tl">오픈 연습</span><span class="ts"><b>${DSTATS.n?m.da:"-"}</b>${m.dt}</span><span class="tgo">${DSTATS.n?"이어서":"시작"}</span></button>
+        ${coachTile()}
       </div>
       <div id="lbslot"></div>`;
   }
@@ -2291,6 +2503,7 @@ function menu(){
   if(window.HGQ_AUTH){const p=$("panel");const a=document.createElement("div");a.className="admrow";
     a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:window.HGQ_AUTH.anon?`<button class="lnk" id="admIn">관리자 로그인</button>`:"";if(a.innerHTML)p.appendChild(a);
     const i=$("admIn");if(i)i.onclick=()=>window.HGQ_AUTH.admin();const o=$("admOut");if(o)o.onclick=()=>window.HGQ_AUTH.out();}
+  $("go3").onclick=()=>gateGo(()=>coachScreen());
   const rn=$("rename");if(rn)rn.onclick=()=>nameScreen(()=>menu());
   lbRender();
 }
@@ -2337,7 +2550,7 @@ function finish(){
   const h=order[hi],L=LEVELS[lv];
   const sc=G.dec.map(scoreOf);
   const tot=handTotal(sc);
-  results.push(tot);STATS.n++;STATS.sum+=tot;STATS.streak=tot>=90?STATS.streak+1:0;STATS.best=Math.max(STATS.best,STATS.streak);saveStats(STATS);lbPush();
+  results.push(tot);STATS.n++;STATS.sum+=tot;STATS.streak=tot>=90?STATS.streak+1:0;STATS.best=Math.max(STATS.best,STATS.streak);saveStats(STATS);lbPush();coachHand(h,sc);
   const endTxt=G.ended==="fold"?`${ST[si]}에서 폴드`:G.ended==="allin"?"올인으로 종료":"리버까지 진행";
   $("top").innerHTML=topHTML(`핸드 #${STATS.n} 결과 · 누적 평균 ${avgOf()}점`,`히어로 ${h.me} vs ${G.V.map(v=>v.pos).join("·")} · ${endTxt}`,`${G.D}BB`);
   bindBack();
@@ -2392,7 +2605,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610221635"></script>
+<script src="webgate.js?v=202610221809"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
