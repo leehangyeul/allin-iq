@@ -634,7 +634,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610221809";
+window.HGQ_WEB=true;window.APP_VERSION="202610222202";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2275,8 +2275,10 @@ function lbHTML(inAdmin){
   const isMe=r=>r.local||(LB.uid&&r.id===LB.uid);
   const row=(r,i)=>`<li class="${isMe(r)?"me":""}"><span class="rk">${i===null?"-":i+1}</span><span class="nm">${r.live?`<i class="dot" title="접속 중"></i>`:""}${esc(r.name)}${isMe(r)?`<em>${r.local&&!LB.room?"나 · 이 기기만":"나"}</em>`:""}</span><span class="sc2"><span class="sct">${tierTag(r.avg,r.n)}<b>${Math.round(r.avg)}</b></span><small>${r.n}${u} · 연속 ${r.best}</small></span></li>`;
   let body=ranked.length?`<ol class="lbl">${ranked.map((r,i)=>row(r,i)).join("")}</ol>`:`<p class="note" style="text-align:left">아직 순위에 오른 사람이 없어요. ${LB.tab==="all"?`핸드 퀴즈와 오픈 연습을 각각 ${ALL_MIN}판 이상 풀면`:`${MIN}${u} 이상 풀면`} 순위에 올라요.</p>`;
-  if(wait.length)body+=LB.tab==="all"?`<p class="lbw">종합 측정 중 (핸드·연습 각 ${ALL_MIN}판 필요): ${wait.map(r=>`${esc(r.name)} 핸드 ${Math.min(r.hn||0,ALL_MIN)}/${ALL_MIN} · 연습 ${Math.min(r.dn||0,ALL_MIN)}/${ALL_MIN}`).join(" · ")}</p>`
-    :`<p class="lbw">기록 쌓는 중 (${MIN}${u} 미만): ${wait.map(r=>`${esc(r.name)} ${r.n}${u}`).join(" · ")}</p>`;
+  // players still being measured stay hidden from everyone else; only the admin page lists them, and a player sees only their own progress
+  const wv=inAdmin?wait:wait.filter(isMe);
+  if(wv.length)body+=LB.tab==="all"?`<p class="lbw">${inAdmin?"종합 측정 중":"내 종합 측정 중"} (핸드·연습 각 ${ALL_MIN}판 필요): ${wv.map(r=>`${esc(r.name)} 핸드 ${Math.min(r.hn||0,ALL_MIN)}/${ALL_MIN} · 연습 ${Math.min(r.dn||0,ALL_MIN)}/${ALL_MIN}`).join(" · ")}</p>`
+    :`<p class="lbw">${inAdmin?"기록 쌓는 중":"내 기록 쌓는 중"} (${MIN}${u} 미만): ${wv.map(r=>`${esc(r.name)} ${r.n}${u}`).join(" · ")}</p>`;
   const relayOnly=!LB.owner&&ro;
   const warn=relayOnly?`<p class="lbw">${LB.room?"내 점수는 지금 접속한 모두에게 실시간으로 보이고, 관리자가 접속해 있을 때 순위에 저장돼요.":"지금 접속 방식으로는 내 점수를 모두의 순위에 올릴 수 없어요. 관리자에게 이메일 초대를 요청해 주세요."}</p>`:"";
   const admin=LB.owner&&!inAdmin?`<button class="ghost adb" id="adGo">관리자 페이지</button>`:"";
@@ -2289,7 +2291,7 @@ function lbBind(){
   const g=$("adGo");if(g)g.onclick=()=>adminScreen();
   const jg=$("joinGo");if(jg)jg.onclick=()=>gateGo(()=>menu());
 }
-function lbRender(){const el=$("lbslot");if(!el)return;const g=el.querySelector&&el.querySelector(".tguide");const op=!!(g&&g.open);el.innerHTML=lbHTML();if(op){const n=el.querySelector(".tguide");if(n)n.open=true}lbBind()}
+function lbRender(){const el=$("lbslot");if(!el)return;const g=el.querySelector&&el.querySelector(".tguide");const op=!!(g&&g.open);el.innerHTML=lbHTML(SCREEN==="admin");if(op){const n=el.querySelector(".tguide");if(n)n.open=true}lbBind()}
 function lbMyRank(tab){
   if(!LB.db||!MYNAME)return"";
   let {ranked,MIN,u}=lbRowsFor(tab);const loc=tab==="hand"?STATS:DSTATS;
@@ -2605,7 +2607,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610221809"></script>
+<script src="webgate.js?v=202610222202"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
