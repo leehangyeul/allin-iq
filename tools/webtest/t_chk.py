@@ -12,7 +12,7 @@ async def main():
             const id=`L${li}#${hi} ${h.me} ${h.hand.join('')}${h.multi?' (multi)':''}`;
             const fb=fullBoard(h);const all=[...h.hand,...(h.vh||[]),...(h.vh2||[]),...fb];
             const dup=all.filter((c,i)=>all.indexOf(c)!==i);if(dup.length)bad.push(id+' 카드 중복 '+dup);
-            let want=0;h.s.forEach(st=>{want+=st.b.length});if(fb.length!==want)bad.push(id+` 보드 ${fb.length}장 vs 스트리트 합 ${want}`);
+            let want=0;h.s.forEach(st=>{want+=st.b.length});if(!h.run&&fb.length!==want)bad.push(id+` 보드 ${fb.length}장 vs 스트리트 합 ${want}`);
             h.s.forEach((st,i)=>{const sum=Object.values(st.f).reduce((a,x)=>a+x,0);if(sum!==100)bad.push(id+` s${i} 빈도합 ${sum}`)});
             if(h.multi&&(!h.vh||!h.vh2))bad.push(id+' 상대 카드 누락');
           }));return {n,multi,bad}}""")
