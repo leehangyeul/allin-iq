@@ -74,6 +74,27 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // coach record (positions, stacks, points per decision): only the player and the admin can read it; it follows the player to every device
+    function validCoach() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['season', 'hn', 'dn', 'h', 'd', 'at'])
+        && num(d.season) && num(d.hn) && num(d.dn) && d.at is number
+        && d.h is list && d.d is list && d.h.size() <= 1200 && d.d.size() <= 400;
+    }
+    // after an admin password reset the player's new account moves the old account's coach record
+    function claimsOld(uid) {
+      return isPlayer() && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && exists(nameDoc(member(request.auth.uid).name))
+        && get(nameDoc(member(request.auth.uid).name)).data.uid == request.auth.uid
+        && get(nameDoc(member(request.auth.uid).name)).data.prev == uid;
+    }
+    match /coach/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || claimsOld(uid));
+      allow create, update: if isAdmin()
+        || (isPlayer() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validCoach());
+      allow delete: if isAdmin() || claimsOld(uid);
+    }
+
     // scores: everyone reads (live ranking); a member writes only their own row under their own nickname
     match /scores/{uid} {
       allow read: if signedIn();

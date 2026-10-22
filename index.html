@@ -634,7 +634,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610230047";
+window.HGQ_WEB=true;window.APP_VERSION="202610230240";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1386,20 +1386,61 @@ function drillAnswer(l){
 
 
 // ================= 코치 보드: 두 게임의 기록에서 공통 약점·강점을 찾아요 =================
-// 기록은 이 기기에만 저장돼요. 문장은 GTO 원리만 쓰고, 숫자는 플레이어 본인의 기록에서만 가져와요.
+// 기록은 이 기기에 저장되고, 서버(coach/{uid})를 통해 같은 계정의 다른 기기와 합쳐져요. 문장은 GTO 원리만 쓰고, 숫자는 플레이어 본인의 기록에서만 가져와요.
 const COACH_MIN=50,COACH_KEEP=150,COACH_SAMP=5;
 function coachLoad(){try{const o=JSON.parse(localStorage.getItem("hgq-coach")||"null");if(o&&o.h&&o.d)return o}catch(e){}return{hn:0,dn:0,h:[],d:[]}}
 let CL=coachLoad();
 function coachSave(){try{localStorage.setItem("hgq-coach",JSON.stringify(CL))}catch(e){}}
 function coachClear(){CL={hn:0,dn:0,h:[],d:[]};coachSave()}
 // one record = one decision: p position, st starting stack, s street (0 = preflop), sc points, pf GTO fold % (null when folding is not an option), fo chose fold, to timed out
-function coachHand(h,sc){CL.hn++;const hi=CL.hn;
+function coachHand(h,sc){CL.hn++;const hi=CL.hn,u=Date.now()+"."+coachDev();
   G.dec.forEach((d,i)=>{const hasF=d.o.some(x=>x[0]==="fold");
-    CL.h.push({i:hi,p:h.me,st:G.D,s:d.si,sc:sc[i],pf:hasF?(+d.f.fold||0):null,fo:d.k==="fold"?1:0,to:d.to?1:0})});
-  CL.h=CL.h.filter(r=>r.i>hi-COACH_KEEP);coachSave()}
+    CL.h.push({i:hi,u,p:h.me,st:G.D,s:d.si,sc:sc[i],pf:hasF?(+d.f.fold||0):null,fo:d.k==="fold"?1:0,to:d.to?1:0})});
+  CL.h=CL.h.filter(r=>r.i>hi-COACH_KEEP);coachSave();coachPush()}
 function coachDrill(sp,l,score,pf){CL.dn++;const di=CL.dn;
-  CL.d.push({i:di,p:sp.pos,st:sp.st,s:0,sc:score,pf:pf==null?null:Math.round(pf),fo:l==="f"?1:0,to:0});
-  CL.d=CL.d.filter(r=>r.i>di-COACH_KEEP);coachSave()}
+  CL.d.push({i:di,u:Date.now()+"."+coachDev(),p:sp.pos,st:sp.st,s:0,sc:score,pf:pf==null?null:Math.round(pf),fo:l==="f"?1:0,to:0});
+  CL.d=CL.d.filter(r=>r.i>di-COACH_KEEP);coachSave();coachPush()}
+
+// ---- the coach record follows the player to every device: it is stored in coach/{uid} and merged by a unique hand id (u) ----
+// a hand = all its decision records sharing one u. Two devices union their hands, so nothing is counted twice, then number them again in time order.
+function coachDev(){let d=lsGet("hgq-dev");if(!d){d=Math.random().toString(36).slice(2,8);lsSet("hgq-dev",d)}return d}
+const COACH_T0=Date.UTC(2026,9,22,9,13); // records made before syncing existed get an id dated from the day the coach board shipped
+const CS={snap:undefined,kick:false,fail:false,busy:false,again:false,pt:null};
+function coachStamp(){const dev=coachDev();let ch=false;
+  ["h","d"].forEach(g=>{const seen={};CL[g].forEach(r=>{if(r.u)return;if(!seen[r.i])seen[r.i]=(COACH_T0+r.i*1000)+"."+dev;r.u=seen[r.i];ch=true})});
+  if(ch)coachSave()}
+const coachKey=u=>{const a=String(u).split(".");return[+a[0]||0,a[1]||""]};
+function coachGroups(arr){const m=new Map();(arr||[]).forEach(r=>{const u=r.u||("x"+r.i);if(!m.has(u))m.set(u,[]);m.get(u).push(r)});return m}
+function coachMerge(loc,srv){
+  const out={};
+  [["h","hn"],["d","dn"]].forEach(([g,c])=>{
+    const L=coachGroups(loc[g]),S=coachGroups(srv&&srv[g]),sv=srv?(+srv[c]||0):0;
+    const sMin=S.size>=COACH_KEEP?Math.min(...[...S.keys()].map(u=>coachKey(u)[0])):0;
+    const M=new Map(S);let added=0;
+    L.forEach((rs,u)=>{if(M.has(u))return;if(S.size>=COACH_KEEP&&coachKey(u)[0]<sMin)return;M.set(u,rs);added++});
+    const ids=[...M.keys()].sort((a,b)=>{const x=coachKey(a),y=coachKey(b);return x[0]-y[0]||(x[1]<y[1]?-1:x[1]>y[1]?1:0)}).slice(-COACH_KEEP);
+    const total=Math.max(sv+added,ids.length,srv?0:(+loc[c]||0)),recs=[];
+    ids.forEach((u,k)=>{const i=total-ids.length+k+1;M.get(u).forEach(r=>recs.push({...r,u,i}))});
+    out[g]=recs;out[c]=total});
+  return out}
+const coachSig=o=>[o.hn,o.dn,(o.h||[]).map(r=>r.u+"/"+r.s).join(","),(o.d||[]).map(r=>r.u).join(",")].join("|");
+// the saved record counts only if it is from this season and newer than this player's last reset
+function coachSrv(snap){if(!snap||!snap.exists)return null;const d=snap.data()||{};
+  if(d.season!==LB.season||(+d.at||0)<=(+(LB.kicks||{})[LB.uid]||0)||!Array.isArray(d.h)||!Array.isArray(d.d))return null;return d}
+function coachPull(snap){
+  if(snap!==undefined)CS.snap=snap;
+  if(CS.snap===undefined||!CS.kick||LB.season===null||!LB.uid||CS.fail)return;
+  coachStamp();const srv=coachSrv(CS.snap),m=coachMerge(CL,srv);
+  if(coachSig(m)!==coachSig(CL)){CL={...CL,...m};coachSave();if(SCREEN==="coach")coachScreen();else if(SCREEN==="menu")menu()}
+  if(CL.hn+CL.dn>0&&(!srv||coachSig(CL)!==coachSig(srv)))coachPush()}
+function coachPush(){
+  if(CS.fail||!LB.db||!LB.uid||!MYNAME||LB.canWrite===false||LB.season===null)return;
+  clearTimeout(CS.pt);CS.pt=setTimeout(async()=>{
+    if(CL.hn+CL.dn===0)return; // nothing to save (a reset cleared it)
+    if(CS.busy){CS.again=true;return}CS.busy=true;
+    try{coachStamp();await LB.db.doc("coach/"+LB.uid).set({season:LB.season,hn:CL.hn,dn:CL.dn,h:CL.h,d:CL.d,at:Date.now()})}
+    catch(e){if(e&&e.code==="invalid_argument")CS.fail=true}
+    CS.busy=false;if(CS.again){CS.again=false;coachPush()}},1500)}
 const COACH_GRP={UTG:"EP","UTG+1":"EP","UTG+2":"EP",MP:"EP",LJ:"MP",HJ:"MP",CO:"LP",BTN:"LP",SB:"BL",BB:"BL"};
 const COACH_POS={EP:["UTG","UTG+1","UTG+2","MP"],MP:["LJ","HJ"],LP:["CO","BTN"],BL:["SB","BB"]};
 const COACH_TXT={
@@ -1559,7 +1600,7 @@ function coachScreen(){
     h=coachSummary(c);
     h+=c.weak.length?c.weak.map(coachCard).join(""):`<div class="coc"><b>뚜렷한 약점이 아직 없어요</b><p class="cowhy">두 게임에서 같은 방향으로 크게 떨어지는 부분이 보이지 않아요. 판 수가 더 쌓이면 다시 분석해요.</p></div>`;
     if(c.strong.length)h+=c.strong.map(coachStrong).join("");
-    h+=`<p class="note">문장은 GTO 원리만 쓰고, 숫자는 내 기록에서만 가져와요. 기록은 이 기기에 저장돼요.</p>`;
+    h+=`<p class="note">문장은 GTO 원리만 쓰고, 숫자는 내 기록에서만 가져와요. 같은 닉네임으로 들어간 폰·컴퓨터의 기록이 자동으로 합쳐져요.</p>`;
   }
   $("panel").innerHTML=h;
   $("panel").querySelectorAll("[data-cf]").forEach(b=>b.onclick=()=>gateGo(()=>coachFocus(b.dataset.cf)));
@@ -2149,9 +2190,10 @@ async function lbInit(){
     const v=s.exists?(+((s.data()||{}).v)||0):0,local=lsGet("hgq-season");
     if(local!==null&&+local!==v){clearLocal();results=[]}
     if(LB.season===v)return;
-    lsSet("hgq-season",String(v));LB.season=v;lbAdopt();lbPresence();
+    lsSet("hgq-season",String(v));LB.season=v;lbAdopt();lbPresence();coachPull();
     if(SCREEN==="menu")menu();if(SCREEN==="admin")adminRender();
   },()=>{});
+  if(LB.uid)db.doc("coach/"+LB.uid).onSnapshot(sn=>coachPull(sn),()=>{CS.fail=true});
   db.collection("scores").onSnapshot(snap=>{
     LB.rows=snap.docs.filter(d=>d.exists).map(d=>({id:d.id,...(d.data()||{})}));
     const first=!LB.rowsReady;LB.rowsReady=true;
@@ -2171,7 +2213,8 @@ async function lbInit(){
     const ids=(s.exists&&(s.data()||{}).ids)||{};LB.kicks=ids;
     const t=+ids[LB.uid]||0,ack=+(lsGet("hgq-kick")||0);
     if(t>ack){clearLocal();results=[];lsSet("hgq-kick",String(t));lbPresence();if(SCREEN==="menu")menu()}
-  },()=>{});
+    CS.kick=true;coachPull();
+  },()=>{CS.kick=true;coachPull()});
   if(room){
     // everyone in the room sees everyone's live record; the owner's page also stores it
     room.onPeers(ch=>{LB.peers=ch.peers.filter(p=>p.kind==="viewer"&&!p.isMe);
@@ -2360,7 +2403,7 @@ function adminBindPlayers(){
   Q("[data-ask]").forEach(b=>b.onclick=()=>{LB.del=b.dataset.ask;adminLive()});
   Q("[data-no]").forEach(b=>b.onclick=()=>{LB.del=null;adminLive()});
   Q("[data-del]").forEach(b=>b.onclick=async()=>{const id=b.dataset.del;b.disabled=true;
-    try{await LB.db.doc("meta/kick").set({ids:{...LB.kicks,[id]:Date.now()}});await LB.db.doc("scores/"+id).delete();LB.msg="기록을 삭제했어요. 그 플레이어의 기록도 0부터 다시 시작해요."}catch(e){LB.msg="삭제하지 못했어요."}LB.del=null;adminLive()});
+    try{await LB.db.doc("meta/kick").set({ids:{...LB.kicks,[id]:Date.now()}});await LB.db.doc("scores/"+id).delete();try{await LB.db.doc("coach/"+id).delete()}catch(e){}LB.msg="기록을 삭제했어요. 그 플레이어의 기록도 0부터 다시 시작해요."}catch(e){LB.msg="삭제하지 못했어요."}LB.del=null;adminLive()});
   Q("[data-blk]").forEach(b=>b.onclick=async()=>{b.disabled=true;
     try{await blockSet(b.dataset.blk,{name:(b.dataset.nm||"").slice(0,12),at:Date.now()});LB.msg=`${b.dataset.nm||"플레이어"} 님을 차단했어요.`}catch(e){LB.msg="차단하지 못했어요."}adminLive()});
   Q("[data-unblk]").forEach(b=>b.onclick=async()=>{b.disabled=true;
@@ -2607,7 +2650,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610230047"></script>
+<script src="webgate.js?v=202610230240"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy

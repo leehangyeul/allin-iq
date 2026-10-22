@@ -144,6 +144,10 @@ try {
             const old = await getDoc(ref("scores/" + nd.uid));
             if (old.exists()) { const d = { ...old.data(), name: nd.name, at: Date.now() }; await setDoc(ref("scores/" + uid), d); await deleteDoc(ref("scores/" + nd.uid)); }
           } catch (e) { console.warn("[ALLIN IQ] record move:", e); }
+          try {
+            const oc = await getDoc(ref("coach/" + nd.uid));
+            if (oc.exists()) { await setDoc(ref("coach/" + uid), { ...oc.data(), at: Date.now() }); await deleteDoc(ref("coach/" + nd.uid)); }
+          } catch (e) { console.warn("[ALLIN IQ] coach move:", e); }
           return { ok: true, name: nd.name, uid, switched: true };
         } catch (e) { return { err: authErr(e) }; }
       },

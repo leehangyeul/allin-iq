@@ -20,6 +20,11 @@ def owns(n,uid):return valid_name(n) and ('names/'+n.lower()) in store and store
 def is_member(uid):
     m=store.get('members/'+uid);return bool(m and 'secret/access' in store and m.get('code')==secret_code())
 def blocked(uid):return uid in ((store.get('meta/block') or {}).get('ids') or {})
+def claims_old(u,old):
+    if not is_player(u):return False
+    m=store.get('members/'+u['uid']);n=m and m.get('name')
+    nd=store.get('names/'+n.lower()) if isinstance(n,str) else None
+    return bool(nd and nd.get('uid')==u['uid'] and nd.get('prev')==old)
 def num(v):return isinstance(v,(int,float)) and not isinstance(v,bool) and 0<=v<=1000000
 def valid_score(d):
     try:return isinstance(d.get('name'),str) and 1<=len(d['name'])<=12 and all(num(d.get(k)) for k in ['hands','sum','best','dn','dsum','dbest']) and d['sum']<=d['hands']*100 and d['dsum']<=d['dn']*100
@@ -29,6 +34,7 @@ def can_read(path,u):
     col,_,id=path.partition('/')
     if col=='secret':return is_admin(u)
     if col=='members':return u['uid']==id or is_admin(u)
+    if col=='coach':return u['uid']==id or is_admin(u) or claims_old(u,id)
     return col in ('meta','scores','names')
 def can_write(path,d,u,delete=False):
     if not u:return False
@@ -45,6 +51,11 @@ def can_write(path,d,u,delete=False):
     if col=='members':
         if delete:return is_admin(u)
         return is_player(u) and u['uid']==id and set(d.keys())<= {'code','name','at'} and 'secret/access' in store and d.get('code')==secret_code() and owns(d.get('name'),id)
+    if col=='coach':
+        if delete:return is_admin(u) or claims_old(u,id)
+        try:ok=set(d)<={'season','hn','dn','h','d','at'} and all(num(d.get(k)) for k in ['season','hn','dn']) and isinstance(d.get('at'),(int,float)) and isinstance(d.get('h'),list) and isinstance(d.get('d'),list) and len(d['h'])<=1200 and len(d['d'])<=400
+        except Exception:ok=False
+        return is_admin(u) or (is_player(u) and u['uid']==id and is_member(id) and not blocked(id) and ok)
     if col=='scores':
         if delete:
             if is_admin(u):return True
