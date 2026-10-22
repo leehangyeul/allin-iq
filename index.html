@@ -634,7 +634,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610222202";
+window.HGQ_WEB=true;window.APP_VERSION="202610230047";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -878,9 +878,9 @@ LEVELS.forEach((L,li)=>L.hands.forEach((h,hi2)=>{h.pf=h.pf||PF[li][hi2];h.s.forE
 const MULTI=[
 [2,{me:"BTN",vs:"UTG",vs2:"MP",hand:["J♠","J♥"],vh:["A♣","T♦"],vh2:["8♠","8♦"],pf:[0,2.5,1.5,9,2.5],
  key:"멀티웨이 팟은 블러프가 줄어서 베팅의 신뢰도가 높아요. 오버페어라도 두 빌런의 레인지를 함께 생각해요.",
- s:[{b:[],a:"빌런1 2.5BB 오픈 → 빌런2 콜, 나머지 폴드",o:VB("3벳"),f:{fold:0,call:65,raise:35},n:"JJ는 3벳도 좋지만 멀티웨이에선 콜로 포지션을 활용하는 쪽이 조금 더 높아요."},
-    {b:["T♣","7♦","3♠"],a:"빌런1 33% 베팅 → 빌런2 콜",o:VB(),f:{fold:0,call:65,raise:35},n:"오버페어. 두 명이 남아 있어 콜이 기본이고, 드로우 보호용 레이즈도 섞어요."},
-    {b:["9♥"],a:"빌런1 체크 → 빌런2 체크",o:HB(50,75),f:{check:40,b50:45,b75:15},n:"둘 다 체크하면 오버페어로 중간 크기 밸류 베팅을 해요. 9는 스트레이트 드로우를 많이 완성하니 크게는 가지 않아요."},
+ s:[{b:[],a:"빌런1 2.5BB 오픈 → 빌런2 콜, 나머지 폴드",o:VB("3벳"),f:{fold:0,call:65,raise:35},n:"JJ는 3벳도 섞어 쓰지만 멀티웨이에선 콜로 포지션을 활용하는 쪽이 더 자주 쓰여요."},
+    {b:["T♣","7♦","3♠"],a:"빌런1 33% 베팅 → 빌런2 콜",o:VB(),f:{fold:0,call:65,raise:35},n:"오버페어. 두 명이 남아 있어 콜이 기본이에요. 레이즈는 8·9 같은 스트레이트 드로우에게 비싼 값을 받으려고 가끔 섞어요."},
+    {b:["9♥"],a:"빌런1 체크 → 빌런2 체크",o:HB(50,75),f:{check:40,b50:45,b75:15},n:"둘 다 체크하면 오버페어로 중간 크기 밸류 베팅을 해요. 9가 나와 스트레이트 드로우가 많이 생겼으니 크게는 가지 않아요."},
     {b:["2♦"],a:"빌런1 66% 베팅 → 빌런2 폴드",o:VB(),f:{fold:35,call:60,raise:5},n:"빌런1의 탑페어·투페어 조합이 많지만 오버페어로 콜이 조금 더 높아요."}]}],
 [2,{me:"BB",vs:"HJ",vs2:"BTN",hand:["8♣","7♣"],vh:["A♦","K♦"],vh2:["T♥","T♣"],pf:[1,2.5,.5,11,2.5],
  key:"멀티웨이에서 아웃오브포지션은 체크가 기본이에요. 드로우는 팟 오즈가 좋아지는 멀티웨이에서 콜 가치가 커져요.",
@@ -1206,8 +1206,8 @@ function bandHTML(){
     if(G.ended==="fold")res=S.d>0?`<div class="sdn warn">끝까지 갔다면 히어로가 이겼어요 · ${hn} vs ${tn}</div>`:S.d<0?`<div class="sdn good">폴드로 칩을 지켰어요 · ${S.top.v.lbl} ${tn}</div>`:`<div class="sdn">끝까지 갔다면 찹이었어요</div>`;
     else res=S.d>0?`<div class="sdn good">히어로 승리 · ${hn} vs ${tn}</div>`:S.d<0?`<div class="sdn bad">${S.top.v.lbl} 승리 · ${tn} vs ${hn}</div>`:`<div class="sdn">찹 · ${hn}</div>`;}
   else if(S&&!S.top)res=`<div class="sdn good">빌런이 모두 폴드했어요</div>`;
-  return `<div class="band"><div class="bfelt"><div class="bb">${fb.length?fb.map((c,i)=>bigCard(c,"sm"+(i>=shown?" run":""))).join(""):`<span class="muted">보드 없음</span>`}</div>
-   ${S&&fb.length>shown?`<span class="runl">흐린 카드는 핸드가 계속됐다면 나왔을 카드</span>`:""}
+  return `<div class="band"><div class="bfelt"><div class="bb">${fb.length?fb.map((c,i)=>bigCard(c,"sm"+(i>=shown&&G.ended!=="allin"?" run":""))).join(""):`<span class="muted">보드 없음</span>`}</div>
+   ${S&&fb.length>shown?`<span class="runl">${G.ended==="allin"?"올인이라 남은 카드까지 모두 나왔어요":"흐린 카드는 핸드가 계속됐다면 나왔을 카드"}</span>`:""}
    <div class="vrow hero"><span class="tagh">히어로 ${h.me}</span><span class="mini2">${bigCard(h.hand[0],"xs hc")}${bigCard(h.hand[1],"xs hc")}</span><span class="hn">${S?HN[S.hr[0]]:""}</span><span class="stv2 h">${G.hs}BB</span></div>
    ${vrows}${res}</div></div>`;
 }
@@ -2573,7 +2573,7 @@ function finish(){
   const isLast=hi===order.length-1;
   $("panel").innerHTML=`
    <div class="scr"><div><span class="muted">이 핸드 종합 점수</span><div class="big">${tot}<span> / 100</span></div></div><span class="grade ${gradeCls(tot)}">${gradeTxt(tot)}</span></div>
-   <p class="dlv"><span class="dlt d${hDiff(h).t}">난이도 ${DIFF_NAME[hDiff(h).t]}</span>${h.multi?"멀티웨이 · ":""}결정 ${h.s.length}번 중 섞어 쓰는 결정 ${h.s.filter(st=>hDecT(st.f)===3).length}번</p>
+   <p class="dlv"><span class="dlt d${hDiff(h).t}">난이도 ${DIFF_NAME[hDiff(h).t]}</span>${h.multi?"멀티웨이 · ":""}결정 ${G.dec.length}번 중 섞어 쓰는 결정 ${G.dec.filter(d=>hDecT(d.f)===3).length}번</p>
    <div class="rows">${rows}</div>
    <div class="cx key"><span class="k">이 핸드의 핵심</span><div>${h.key}</div></div>
    <div class="cx ok"><span class="k">잘한 점</span><div>${good.length?`${good.join(", ")} 판단이 GTO와 같아요.`:"이번 핸드는 GTO와 다른 선택이 많았어요."}</div></div>
@@ -2607,7 +2607,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610222202"></script>
+<script src="webgate.js?v=202610230047"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
