@@ -111,6 +111,43 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 .cot2{border-radius:12px;background:rgba(0,0,0,.25);padding:12px 14px;display:flex;flex-direction:column;gap:6px}.cot2 b{font-size:13px;color:#F0D7AE}.cot2 span{font-size:13px;line-height:1.6;color:#E6E1D6}
 .cot2 ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.6;color:#E6E1D6}
 
+
+/* 결과 카드 (F안) */
+.rcnav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:1fr 2fr;gap:6px;padding:10px 0 calc(12px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(7,9,15,0),#07090F 28%)}
+.rcnav .ghost,.rcnav .cta{min-height:54px;width:auto}
+.rcbars{grid-column:1/-1;width:100%;box-sizing:border-box;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:4px;padding:0}
+.rcbars button{height:16px;border:0;padding:6px 0;background:transparent}
+.rcbars i{display:block;height:4px;border-radius:2px;background:#2A2F3B}.rcbars i.on{background:#D4AF7C}
+.rcpg{display:flex;flex-direction:column;gap:14px}
+.rclab{font-size:13px;font-weight:700;letter-spacing:.1em;color:#D4AF7C}
+.rchead{margin:0;font-size:22px;font-weight:800;line-height:1.45;word-break:keep-all}.rchead em{font-style:normal;color:#EAD3AE}
+.rcrows{display:flex;flex-direction:column;gap:8px}
+.rcrow{display:grid;grid-template-columns:64px minmax(0,1fr) 40px 14px;gap:10px;align-items:center;min-height:52px;padding:0 12px;border-radius:12px;border:1px solid #1A1F2B;background:#0C1019;color:inherit;font-family:inherit;text-align:left;width:100%}
+.rcrow.bd{border-color:rgba(217,138,115,.45)}
+.rcrow .rn{font-size:14px;color:#A39C8E}.rcrow .rm{font-size:15px}.rcrow .rm b.a{color:#F0B9A6}.rcrow .rm b.z{color:#F6E4C4}.rcrow .rm s{text-decoration:none;color:#6E6A62}
+.rcrow .rs{font-size:18px;font-weight:700;text-align:right;color:#EAD3AE}.rcrow.bd .rs{color:#F0B9A6}
+.rcname{font-size:30px;font-weight:800;line-height:1.1}
+.rcvil{align-self:flex-start;padding:8px 14px;border-radius:14px;background:#24140F;box-shadow:inset 0 0 0 1px rgba(217,138,115,.5);font-size:14px;line-height:1.5;color:#F0B9A6}
+.rctbl{border-radius:18px;padding:14px;background:radial-gradient(ellipse at 50% 30%,#25211A 0%,#17140F 60%,#0B0A08 100%);box-shadow:inset 0 0 0 1px rgba(212,175,124,.45);display:flex;flex-direction:column;gap:12px}
+.rctbl .t{font-size:12px;font-weight:700;letter-spacing:.06em;color:#A39C8E}
+.rctbl .cr{display:flex;gap:6px}
+.rctbl .hr{display:flex;align-items:center;gap:12px}.rctbl .hr.l{padding-top:12px;border-top:1px solid rgba(212,175,124,.25)}
+.rctbl .hi{display:flex;flex-direction:column;gap:2px;font-size:13px;color:#A39C8E}.rctbl .hi b{font-size:15px;color:#F8F9FB}
+.rcpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.rcpick>div{padding:7px 10px;border-radius:10px;background:#12151C;box-shadow:inset 0 0 0 1px #D98A73}
+.rcpick>div.g{background:#231D13;box-shadow:inset 0 0 0 1px #D4AF7C}.rcpick>div.ok{box-shadow:inset 0 0 0 1px #D4AF7C}
+.rcpick small{display:block;font-size:11px;color:#A39C8E}.rcpick>div.g small{color:#D4AF7C}
+.rcpick b{font-size:18px;line-height:1.3;color:#F0B9A6}.rcpick>div.g b{color:#F6E4C4}.rcpick>div.ok b{color:#F6E4C4}
+.rcpick span{font-size:12px;font-weight:700;margin-left:6px;color:#F0B9A6}.rcpick>div.g span{color:#D4AF7C}
+.rcwhy{margin:0;font-size:18px;font-weight:500;line-height:1.6;word-break:keep-all}
+.rcsecs{display:flex;flex-direction:column;gap:8px}.rcsecs>span.h{font-size:13px;font-weight:700;color:#A39C8E}
+.rcsec{border-radius:14px;background:#0C1019;border:1px solid #1A1F2B}.rcsec.open{border-color:rgba(212,175,124,.45)}
+.rcsec>button{width:100%;min-height:56px;border:0;background:transparent;color:inherit;font-family:inherit;display:grid;grid-template-columns:minmax(0,1fr) 20px;gap:10px;align-items:center;padding:8px 14px;text-align:left}
+.rcsec>button b{display:block;font-size:15px}.rcsec>button small{display:block;font-size:13px;color:#A39C8E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcsec>button em{font-style:normal;font-size:20px;color:#D4AF7C;text-align:center}
+.rcbody{padding:2px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.rcbody .rxload{margin:0;font-size:13px;color:#A39C8E}
+.rcnote{font-size:12px;line-height:1.5;color:#A39C8E}
 /* 코치 상세 분석 */
 .cdgo{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;border-radius:14px;border:1px solid #D4AF7C;background:#1B2640;color:var(--fg);padding:13px 16px;margin-bottom:12px}
 .cdgo b{display:block;font-size:15px;color:var(--gold-ink)}.cdgo small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.cdgo i{font-style:normal;font-size:22px;color:var(--gold)}
@@ -684,7 +721,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610231548";
+window.HGQ_WEB=true;window.APP_VERSION="202610240209";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2881,6 +2918,75 @@ function qText(h,c){
   return `${c.label}에서 <b class="qh">히어로가 먼저</b> 행동해요. 체크할까요, 베팅할까요?`;
 }
 
+
+// ---- 결과 카드 (F안): 요약 한 장 + 결정마다 한 장씩 넘겨 보기 ----
+function rgMake(h,decs){
+  let P;const prep=()=>{if(P===undefined){try{P=rgPrep(h,decs)}catch(e){P=null}}return P};const C={};
+  return i=>{if(C[i])return C[i];const d=decs[i];let r={sum:[],html:""};
+    try{if(d.si===0)r=rgPre(h,decs);else{const p=prep();r=!p?r:p.skip?{sum:[],html:`<div class="rx"><b>${ST[d.si]} 레인지 분석</b><p>${p.skip}</p></div>`}:(rgPost(h,decs,i,p)||r)}}catch(e){}
+    return C[i]=r}}
+function plainTxt(t){return String(t||"").replace(/<em>[\s\S]*$/,"").replace(/<[^>]+>/g,"").trim()}
+function resCards(h,sc,tot){
+  const decs=G.dec.slice(),n=decs.length,total=n+1,get=rgMake(h,decs);
+  let pg=0;const open={},ready={};
+  const bestL=d=>lab(d.o,bestOf(d.o,d.f));
+  const isLast=hi===order.length-1;
+  const goNext=()=>{hi++;if(hi>=order.length)deal();newHand();window.scrollTo({top:0})};
+  function bars(){$("prog").innerHTML=`<div class="rcbars" style="--n:${total}">${Array.from({length:total},(_,k)=>`<button data-pg="${k}" aria-label="${k?decs[k-1].label:"요약"}"><i class="${k<=pg?"on":""}"></i></button>`).join("")}</div>`;
+    $("prog").querySelectorAll("button[data-pg]").forEach(b=>b.onclick=()=>go(+b.dataset.pg))}
+  function summary(){
+    const weakI=sc.reduce((m,v,i)=>v<sc[m]?i:m,0);
+    const good=sc.every(v=>v>=90);
+    const head=good?`모든 결정이 <em>GTO와 같은 방향</em>이에요.`:`GTO가 가장 자주 쓰는 선택은 ${decs.map(d=>`${d.label} <em>${bestL(d)}</em>`).join(" · ")}이에요.`;
+    const rows=decs.map((d,i)=>{const bk=bestOf(d.o,d.f);return `<button class="rcrow ${sc[i]<60?"bd":""}" data-pg="${i+1}"><span class="rn">${d.label}</span><span class="rm"><b class="a">${lab(d.o,d.k)}</b> <s>→</s> <b class="z">${lab(d.o,bk)}</b></span><b class="rs">${sc[i]}</b><svg width="10" height="14" viewBox="0 0 10 14" fill="none" stroke="#D4AF7C" stroke-width="1.8" aria-hidden="true"><path d="M2 2l5 5-5 5"></path></svg></button>`}).join("");
+    return `<div class="rcpg"><span class="rclab">이 핸드 요약</span>
+     <div class="scr"><div><div class="big">${tot}<span> / 100</span></div></div><span class="grade ${gradeCls(tot)}">${gradeTxt(tot)}</span></div>
+     <p class="rchead">${head}</p>
+     <div class="rcrows">${rows}</div>
+     ${bandHTML()}
+     <div class="cx key"><span class="k">이 핸드의 핵심</span><div>${h.key}</div></div>
+     <p class="dlv"><span class="dlt d${hDiff(h).t}">난이도 ${DIFF_NAME[hDiff(h).t]}</span>${h.multi?"멀티웨이 · ":""}결정 ${n}번 중 섞어 쓰는 결정 ${decs.filter(d=>hDecT(d.f)===3).length}번</p>
+     <div class="statrow"><span>누적 <b>${STATS.n}</b>핸드 · 평균 <b>${avgOf()}</b> ${tierTag(STATS.sum/STATS.n,STATS.n)}</span><span>연속 90점+ <b>${STATS.streak}</b></span></div>
+     <div id="myrank" data-tab="hand">${lbMyRank("hand")}</div></div>`}
+  function street(i){
+    const d=decs[i],bk=bestOf(d.o,d.f),bd=boardUpTo(h,d.si),r=ready[i]?get(i):null;
+    const bars=d.o.slice().sort((a,b)=>(+d.f[b[0]]||0)-(+d.f[a[0]]||0)).map(([k,l])=>{const v=+d.f[k]||0,me=k===d.k,pt=strictPts(d.f,k),ok=pt===100;
+      return `<div class="fq ${ok?"ok":""} ${me?"me":""} ${pt===0?"zero":""}"><div class="fq1"><span class="fql">${l}</span>${ok?`<em class="fqc ok">정답</em>`:""}${me?`<em class="fqc me">${d.to?"시간 초과":"내 선택"}</em>`:""}</div><div class="fqt"><i style="width:${Math.max(v,1.5)}%"></i></div><div class="fqr"><span class="fqv">${v}%</span><span class="fqp">${pt}점</span></div></div>`}).join("");
+    const top2=d.o.slice().sort((a,b)=>(+d.f[b[0]]||0)-(+d.f[a[0]]||0)).slice(0,2).map(([k,l])=>`${l} ${+d.f[k]||0}%`).join(" · ");
+    const det=detailBlock(h,d);
+    const secs=[{id:"freq",t:"GTO 빈도",peek:top2,body:`${bars}<span class="rcnote">GTO가 이 상황에서 각 행동을 고르는 비율(예시 수치)이에요. 비율이 높을수록 점수가 높아요.</span>`}];
+    const sumRows=r?(r.sum||[]):[];
+    if(!r||sumRows.length)secs.push({id:"facts",t:"판단 근거",peek:r?plainTxt(sumRows[0][1]):"불러오는 중…",body:r?sumRows.map(([k,v])=>`<div class="cl"><span>${k}</span>${v}</div>`).join(""):`<p class="rxload">계산 중…</p>`});
+    if(!r||r.html)secs.push({id:"rx",t:d.si===0?"프리플랍 차트":"레인지 분석",peek:d.si===0?"내 핸드가 차트에서 어느 분류인지 봐요":"빌런 레인지와 승률을 비교해요",body:r?r.html:`<p class="rxload">${d.si===0?"차트와 레인지 승률 계산 중…":"레인지 분석 계산 중…"}</p>`});
+    if(det)secs.push({id:"calc",t:"계산",peek:"팟 오즈 · 필요 승률 · 기대값",body:det});
+    const vt=plainTxt(d.a);
+    return `<div class="rcpg"><span class="rcname">${d.label}</span>
+     <div class="rcvil">${hl(d.a)}</div>
+     <div class="rctbl">${bd.length?`<div><div class="t">보드</div><div class="cr">${bd.map(c=>bigCard(c,"sm")).join("")}</div></div>`:""}
+      <div class="hr ${bd.length?"l":""}"><div class="cr">${h.hand.map(c=>bigCard(c,"sm hc")).join("")}</div><div class="hi"><b>히어로 ${h.me}</b><span>스택 ${d.hs0}BB · 팟 ${d.pot}BB</span></div></div></div>
+     <div class="rcpick"><div class="${sc[i]>=90?"ok":""}"><small>내 선택</small><b>${lab(d.o,d.k)}</b><span>${sc[i]}점</span></div><div class="g"><small>정답 · GTO 1순위</small><b>${lab(d.o,bk)}</b><span>GTO ${+d.f[bk]||0}%</span></div></div>
+     <p class="rcwhy">${d.n}</p>
+     <div class="rcsecs"><span class="h">자세히 보기 · 터치하면 펼쳐져요</span>${secs.map(x=>{const o=!!open[i+":"+x.id];return `<section class="rcsec ${o?"open":""}"><button data-sec="${x.id}" aria-expanded="${o}"><span><b>${x.t}</b><small>${x.peek}</small></span><em>${o?"−":"+"}</em></button>${o?`<div class="rcbody">${x.body}</div>`:""}</section>`}).join("")}</div></div>`}
+  function draw(){
+    const body=pg===0?summary():street(pg-1);
+    const last=pg===total-1;
+    const nav=pg===0?`<button class="ghost" id="next">${"다음 핸드"}</button><button class="cta" id="rcgo">스트리트별로 보기</button>`
+      :`<button class="ghost" id="rcprev">이전</button><button class="cta" ${last?`id="next"`:`id="rcfw"`}>${last?("다음 핸드"):"다음 · "+decs[pg].label}</button>`;
+    $("panel").innerHTML=`${body}<div class="rcnav">${nav}</div>`;
+    bars();
+    const q=id=>{const e=$(id);return e};
+    if(q("next"))q("next").onclick=goNext;
+    if(q("rcgo"))q("rcgo").onclick=()=>go(1);
+    if(q("rcprev"))q("rcprev").onclick=()=>go(pg-1);
+    if(q("rcfw"))q("rcfw").onclick=()=>go(pg+1);
+    $("panel").querySelectorAll("button[data-pg]").forEach(b=>b.onclick=()=>go(+b.dataset.pg));
+    $("panel").querySelectorAll("button[data-sec]").forEach(b=>b.onclick=()=>{const k=(pg-1)+":"+b.dataset.sec;open[k]=!open[k];draw()});
+    if(pg>0&&!ready[pg-1]){const i=pg-1,mine=pg;setTimeout(()=>{if(ready[i])return;get(i);ready[i]=1;if(pg===mine)draw()},60)}
+  }
+  function go(k){pg=Math.max(0,Math.min(total-1,k));draw();window.scrollTo({top:0})}
+  draw();
+}
+
 function finish(){
   qTimerStop();
   const h=order[hi],L=LEVELS[lv];
@@ -2891,32 +2997,8 @@ function finish(){
   $("top").innerHTML=topHTML(`핸드 #${STATS.n} 결과 · 누적 평균 ${avgOf()}점`,`히어로 ${h.me} vs ${G.V.map(v=>v.pos).join("·")} · ${endTxt}`,`${G.D}BB`);
   bindBack();
   $("prog").innerHTML=progHTML();
-  $("stage").innerHTML=bandHTML();
-  const rows=G.dec.map((d,i)=>{const bk=bestOf(d.o,d.f);
-    // answer first: actions sorted by GTO frequency; every action shows the points it earns, so "close to the answer" is visible
-    const bars=d.o.slice().sort((a,b)=>(+d.f[b[0]]||0)-(+d.f[a[0]]||0)).map(([k,l])=>{const v=+d.f[k]||0,me=k===d.k,pt=strictPts(d.f,k),ok=pt===100;
-      return `<div class="fq ${ok?"ok":""} ${me?"me":""} ${pt===0?"zero":""}"><div class="fq1"><span class="fql">${l}</span>${ok?`<em class="fqc ok">정답</em>`:""}${me?`<em class="fqc me">${d.to?"시간 초과":"내 선택"}</em>`:""}</div>
-        <div class="fqt"><i style="width:${Math.max(v,1.5)}%"></i></div><div class="fqr"><span class="fqv">${v}%</span><span class="fqp">${pt}점</span></div></div>`}).join("");
-    const bd=boardUpTo(h,d.si);
-    const col=sc[i]>=90?"good":sc[i]>=60?"warn":"bad";
-    return `<details class="row" ${i===G.dec.length-1||sc[i]<90?"open":""}><summary><span class="sn">${d.label}</span><span class="sm2">내 선택 <b class="cb">${lab(d.o,d.k)}</b> · 정답 <b class="cg">${lab(d.o,bk)}</b></span><span class="n ${col}">${sc[i]}</span></summary>
-      <div class="rbody">${bd.length?`<div class="rb">${bd.map(c=>bigCard(c,"xs")).join("")}</div>`:""}<div class="sa">${hl(d.a)}</div><div class="bars">${bars}</div><div class="core"><span class="ck">핵심</span><p class="cn">${d.n}</p><div class="cs"><p class="rxload">${d.si===0?"차트와 레인지 승률 계산 중…":"레인지 분석 계산 중…"}</p></div></div>
-      <details class="more"><summary>자세한 설명 보기</summary><div class="mbody">${detailBlock(h,d)}<div class="rxslot" data-i="${i}"></div></div></details></div></details>`}).join("");
-  const good=G.dec.map((d,i)=>sc[i]>=90?d.label:null).filter(Boolean);
-  const weak=G.dec.map((d,i)=>sc[i]<90?`${d.label}에서 ${lab(d.o,d.k)}보다 ${ga(lab(d.o,bestOf(d.o,d.f)))} 더 자주 쓰여요.`:null).filter(Boolean);
-  const isLast=hi===order.length-1;
-  $("panel").innerHTML=`
-   <div class="scr"><div><span class="muted">이 핸드 종합 점수</span><div class="big">${tot}<span> / 100</span></div></div><span class="grade ${gradeCls(tot)}">${gradeTxt(tot)}</span></div>
-   <p class="dlv"><span class="dlt d${hDiff(h).t}">난이도 ${DIFF_NAME[hDiff(h).t]}</span>${h.multi?"멀티웨이 · ":""}결정 ${G.dec.length}번 중 섞어 쓰는 결정 ${G.dec.filter(d=>hDecT(d.f)===3).length}번</p>
-   <div class="rows">${rows}</div>
-   <div class="cx key"><span class="k">이 핸드의 핵심</span><div>${h.key}</div></div>
-   <div class="cx ok"><span class="k">잘한 점</span><div>${good.length?`${good.join(", ")} 판단이 GTO와 같아요.`:"이번 핸드는 GTO와 다른 선택이 많았어요."}</div></div>
-   ${weak.length?`<div class="cx ng"><span class="k">아쉬운 점</span>${weak.map(w=>`<div>${w}</div>`).join("")}</div>`:""}
-   <div class="statrow"><span>누적 <b>${STATS.n}</b>핸드 · 평균 <b>${avgOf()}</b> ${tierTag(STATS.sum/STATS.n,STATS.n)}</span><span>연속 90점+ <b>${STATS.streak}</b></span></div>
-   <div id="myrank" data-tab="hand">${lbMyRank("hand")}</div>
-   <button class="cta" id="next">다음 핸드</button>`;
-  $("next").onclick=()=>{hi++;if(hi>=order.length)deal();newHand();window.scrollTo({top:0})};
-  rgAttach(h,G.dec.slice());
+  $("stage").innerHTML="";
+  resCards(h,sc,tot);
   window.scrollTo({top:0});
 }
 
@@ -2941,7 +3023,7 @@ function final(){
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610231548"></script>
+<script src="webgate.js?v=202610240209"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
