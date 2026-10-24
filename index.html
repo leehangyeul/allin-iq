@@ -148,6 +148,13 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 .rcbody{padding:2px 14px 16px;display:flex;flex-direction:column;gap:10px}
 .rcbody .rxload{margin:0;font-size:13px;color:#A39C8E}
 .rcnote{font-size:12px;line-height:1.5;color:#A39C8E}
+.rcrs{border-radius:14px;padding:14px;background:#12161F;border:1px solid rgba(212,175,124,.35);display:flex;flex-direction:column;gap:10px}
+.rcrs>b{font-size:16px;color:#EAD3AE}.rcrl{margin:0;font-size:15px;line-height:1.6;word-break:keep-all}.rcrl b{color:#F6E4C4}
+.rcrs ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rcrs li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;padding-top:8px;border-top:1px solid #1E2635;font-size:14px;line-height:1.55}
+.rcrs li>span{font-size:12px;color:#A39C8E;padding-top:2px}.rcrs li b{font-weight:700}.rcrs li em{display:block;font-style:normal;font-size:13px;color:#A39C8E}
+.rcrs li b.good{color:#7FD8A0}.rcrs li b.bad{color:#F29A8E}.rcrs li b.mid{color:#EAD3AE}
+.rcrn{margin:0;font-size:12px;color:#A39C8E}
 /* 코치 상세 분석 */
 .cdgo{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;border-radius:14px;border:1px solid #D4AF7C;background:#1B2640;color:var(--fg);padding:13px 16px;margin-bottom:12px}
 .cdgo b{display:block;font-size:15px;color:var(--gold-ink)}.cdgo small{display:block;font-size:12px;color:var(--muted);margin-top:2px}.cdgo i{font-style:normal;font-size:22px;color:var(--gold)}
@@ -721,7 +728,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610240209";
+window.HGQ_WEB=true;window.APP_VERSION="202610250249";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2949,14 +2956,13 @@ function resCards(h,sc,tot){
      <div class="statrow"><span>누적 <b>${STATS.n}</b>핸드 · 평균 <b>${avgOf()}</b> ${tierTag(STATS.sum/STATS.n,STATS.n)}</span><span>연속 90점+ <b>${STATS.streak}</b></span></div>
      <div id="myrank" data-tab="hand">${lbMyRank("hand")}</div></div>`}
   function street(i){
-    const d=decs[i],bk=bestOf(d.o,d.f),bd=boardUpTo(h,d.si),r=ready[i]?get(i):null;
+    const d=decs[i],bk=bestOf(d.o,d.f),bd=boardUpTo(h,d.si),r=ready[i]?get(i):null,same=d.k===bk,mine=lab(d.o,d.k),best=lab(d.o,bk);
     const bars=d.o.slice().sort((a,b)=>(+d.f[b[0]]||0)-(+d.f[a[0]]||0)).map(([k,l])=>{const v=+d.f[k]||0,me=k===d.k,pt=strictPts(d.f,k),ok=pt===100;
       return `<div class="fq ${ok?"ok":""} ${me?"me":""} ${pt===0?"zero":""}"><div class="fq1"><span class="fql">${l}</span>${ok?`<em class="fqc ok">정답</em>`:""}${me?`<em class="fqc me">${d.to?"시간 초과":"내 선택"}</em>`:""}</div><div class="fqt"><i style="width:${Math.max(v,1.5)}%"></i></div><div class="fqr"><span class="fqv">${v}%</span><span class="fqp">${pt}점</span></div></div>`}).join("");
     const top2=d.o.slice().sort((a,b)=>(+d.f[b[0]]||0)-(+d.f[a[0]]||0)).slice(0,2).map(([k,l])=>`${l} ${+d.f[k]||0}%`).join(" · ");
     const det=detailBlock(h,d);
     const secs=[{id:"freq",t:"GTO 빈도",peek:top2,body:`${bars}<span class="rcnote">GTO가 이 상황에서 각 행동을 고르는 비율(예시 수치)이에요. 비율이 높을수록 점수가 높아요.</span>`}];
     const sumRows=r?(r.sum||[]):[];
-    if(!r||sumRows.length)secs.push({id:"facts",t:"판단 근거",peek:r?plainTxt(sumRows[0][1]):"불러오는 중…",body:r?sumRows.map(([k,v])=>`<div class="cl"><span>${k}</span>${v}</div>`).join(""):`<p class="rxload">계산 중…</p>`});
     if(!r||r.html)secs.push({id:"rx",t:d.si===0?"프리플랍 차트":"레인지 분석",peek:d.si===0?"내 핸드가 차트에서 어느 분류인지 봐요":"빌런 레인지와 승률을 비교해요",body:r?r.html:`<p class="rxload">${d.si===0?"차트와 레인지 승률 계산 중…":"레인지 분석 계산 중…"}</p>`});
     if(det)secs.push({id:"calc",t:"계산",peek:"팟 오즈 · 필요 승률 · 기대값",body:det});
     const vt=plainTxt(d.a);
@@ -2966,6 +2972,10 @@ function resCards(h,sc,tot){
       <div class="hr ${bd.length?"l":""}"><div class="cr">${h.hand.map(c=>bigCard(c,"sm hc")).join("")}</div><div class="hi"><b>히어로 ${h.me}</b><span>스택 ${d.hs0}BB · 팟 ${d.pot}BB</span></div></div></div>
      <div class="rcpick"><div class="${sc[i]>=90?"ok":""}"><small>내 선택</small><b>${lab(d.o,d.k)}</b><span>${sc[i]}점</span></div><div class="g"><small>정답 · GTO 1순위</small><b>${lab(d.o,bk)}</b><span>GTO ${+d.f[bk]||0}%</span></div></div>
      <p class="rcwhy">${d.n}</p>
+     <div class="rcrs"><b>${same?"이 선택이 맞는 이유":`${ga(best)} 더 좋은 이유`}</b>
+      <p class="rcrl">${same?`GTO가 가장 자주 고르는 행동(${best}, ${+d.f[bk]||0}%)과 같아요.`:`GTO는 이 상황에서 <b>${best}</b>를 가장 자주(${+d.f[bk]||0}%) 골라요. 내가 고른 ${mine}은 ${+d.f[d.k]||0}%라서 ${sc[i]}점이에요.`}</p>
+      ${r?(sumRows.length?`<ul>${sumRows.map(([k,v])=>`<li><span>${k}</span><div>${v}</div></li>`).join("")}</ul>`:""):`<p class="rxload">근거 계산 중…</p>`}
+      <p class="rcrn">숫자 근거는 아래 접이식(차트·레인지 분석·계산)에서 더 자세히 볼 수 있어요.</p></div>
      <div class="rcsecs"><span class="h">자세히 보기 · 터치하면 펼쳐져요</span>${secs.map(x=>{const o=!!open[i+":"+x.id];return `<section class="rcsec ${o?"open":""}"><button data-sec="${x.id}" aria-expanded="${o}"><span><b>${x.t}</b><small>${x.peek}</small></span><em>${o?"−":"+"}</em></button>${o?`<div class="rcbody">${x.body}</div>`:""}</section>`}).join("")}</div></div>`}
   function draw(){
     const body=pg===0?summary():street(pg-1);
@@ -3020,10 +3030,31 @@ function final(){
   $("again").onclick=()=>start(lv);
   $("menu").onclick=()=>{menu();window.scrollTo({top:0})};
 }
+// ---- 프리플랍 첫 결정의 정답을 교재 차트 분류와 맞춤 ----
+// 새로 만든 문제의 예시 빈도 중 일부가 차트 분류(콜/오픈/3벳/올인/폴드)와 반대로 정답이 나오던 문제를 막아요.
+// 새 숫자는 만들지 않고, 차트가 말하는 행동과 지금 가장 높은 행동의 빈도 값을 서로 바꿔요. 차트에 선택지가 없으면 그대로 둬요.
+function pfChartLetter(h){
+  try{const D=h.d||100,S=rgBucket(D);if(!S)return null;
+    const me=QPOS(h.me),v1=QPOS(h.vs),a=h.s[0].a,unopened=h.pf[1]<=1,vs3=/히어로 [\d.]+BB 오픈 → 빌런 3벳/.test(a),jam=/빌런 [\d.]+BB 올인/.test(a);
+    if(jam)return null;const hk=(unopened||vs3)?"O:"+me:defKey(me,v1);
+    const c=(RANGES[S]||{})[hk];return c?c.g[clsIdx(h.hand)]:null}catch(e){return null}
+}
+function chartAlign(){let n=0;
+  LEVELS.forEach(L=>L.hands.forEach(h=>{const s0=h.s&&h.s[0];if(!s0||h.__al)return;h.__al=1;
+    const L0=pfChartLetter(h);if(!L0)return;
+    const keys=s0.o.map(x=>x[0]),isR=k=>k==="raise"||/^b\d+$/.test(k);
+    const tk=L0==="f"?keys.find(k=>k==="fold"):L0==="j"?keys.find(k=>k==="jam"):(L0==="c"||L0==="l")?keys.find(k=>k==="call"):(keys.find(isR)||keys.find(k=>k==="jam"));
+    if(!tk)return;
+    const f=s0.f,top=keys.reduce((a,b)=>(+f[b]||0)>(+f[a]||0)?b:a);
+    if((+f[tk]||0)>=(+f[top]||0))return;
+    const t=f[tk]||0;f[tk]=f[top];f[top]=t;n++}));
+  return n}
+
+chartAlign();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610240209"></script>
+<script src="webgate.js?v=202610250249"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
