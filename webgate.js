@@ -170,10 +170,10 @@
     origMenu();
     if (LB.owner) return;
     const rn = $("rename"); if (rn) rn.remove();
-    if (isPlayerAcc()) {
+    if (isPlayerAcc() && MENUTAB === "more") {
       const p = $("panel"); const row = document.createElement("div"); row.className = "admrow";
       row.innerHTML = `<span>${esc(MYNAME)} 님으로 로그인됨</span><button class="lnk" id="plOut">로그아웃</button>`;
-      p.appendChild(row); $("plOut").onclick = () => leave();
+      p.insertBefore(row, p.querySelector(".mnavsp")); $("plOut").onclick = () => leave();
     }
   };
 

@@ -71,6 +71,15 @@ async def broadcast():
 async def mkpage(b,ident,vp=(390,900),delay=0,storage=None):
     ctx=await b.new_context(viewport={'width':vp[0],'height':vp[1]},storage_state=storage)
     pg=await ctx.new_page();pg.errs=[];pg.on('pageerror',lambda e:pg.errs.append(str(e)))
+    # 관리자 로그인 링크는 '더보기' 탭에 있어요: 누르기 전에 그 탭으로 가고, 누른 뒤엔 홈 탭으로 되돌려 둬요
+    _oc=pg.click
+    async def _click(sel,*a,**k):
+        if sel in('#admIn','#admOut','#adGo','#rename','#plOut') and not await pg.query_selector(sel):
+            await pg.evaluate("()=>{if(typeof MENUTAB!=='undefined'&&SCREEN==='menu'){MENUTAB='more';menu()}}")
+        r=await _oc(sel,*a,**k)
+        if sel in('#admIn','#admOut','#adGo','#rename','#plOut'):await pg.evaluate("()=>{if(typeof MENUTAB!=='undefined')MENUTAB='home'}")
+        return r
+    pg.click=_click
     pg.on('console',lambda m:pg.errs.append('console:'+m.text) if m.type=='error' else None)
     for name,f in [('firebase-app','mock-app.js'),('firebase-auth','mock-auth2.js'),('firebase-firestore','mock-fs2.js')]:
         body=open(T+f,encoding='utf8').read()

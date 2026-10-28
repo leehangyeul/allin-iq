@@ -13,8 +13,11 @@ async def main():
         await pg.click('#admIn2' if await pg.query_selector('#admIn2') else '#admIn');await asyncio.sleep(1);await broadcast();await asyncio.sleep(.5)
         for h,d in [(7,0),(5,4),(5,5)]:
             await pg.evaluate(f"()=>{{STATS={{n:{h},sum:{h*60},streak:0,best:0}};DSTATS={{n:{d},sum:{d*90},streak:0,best:0}};menu()}}")
-            print(h,d,'->',await pg.evaluate("()=>document.querySelector('.mov').innerText"))
-        await pg.evaluate("()=>{LB.tab='all';lbRender()}")
+            tx=await pg.evaluate("()=>document.querySelector('.hmring').innerText")
+            print(h,d,'->',tx.replace('\n',' / '))
+            ok=('측정 중' in tx) if not(h>=5 and d>=5) else ('측정 중' not in tx)
+            if not ok:print('FAIL 종합 표시 규칙 어긋남',h,d);sys.exit(1)
+        await pg.evaluate("()=>{MENUTAB='rank';menu();LB.tab='all';lbRender()}")
         print('ALL:',(await pg.evaluate("()=>document.getElementById('lbbox').innerText")).replace('\n',' / ')[:420])
         await pg.evaluate("()=>{LB.tab='hand';lbRender()}")
         print('HAND:',(await pg.evaluate("()=>document.querySelector('.lbl').innerText")).replace('\n',' / ')[:200])

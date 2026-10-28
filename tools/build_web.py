@@ -72,12 +72,11 @@ rep('''<span class="badge2 ${LB.room?"on":""}">${LB.room?`접속 ${on}명`:"실�
 rep('''  }while(LB.again)}catch(e){if(e&&e.code==="invalid_argument"){LB.writeFail=true;if(SCREEN==="menu")lbRender()}}''',
 '''  }while(LB.again)}catch(e){if(e&&e.code==="invalid_argument"){LB.writeFail=true;if(window.HGQ_WEB&&!LB.owner){lsSet("hgq-acc","");ACC.sig=null;gateCheck()}if(SCREEN==="menu")lbRender()}}''')
 # ---- admin sign-in link and update notice on the start screen
-rep('''  $("go").onclick=()=>gateGo(()=>start(0));
-  $("go2").onclick=()=>gateGo(()=>drillStart());''','''  $("go").onclick=()=>gateGo(()=>start(0));
-  $("go2").onclick=()=>gateGo(()=>drillStart());
+rep('''function moreBind(){}''','''function moreBind(){
   if(window.HGQ_AUTH){const p=$("panel");const a=document.createElement("div");a.className="admrow";
-    a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:window.HGQ_AUTH.anon?`<button class="lnk" id="admIn">관리자 로그인</button>`:"";if(a.innerHTML)p.appendChild(a);
-    const i=$("admIn");if(i)i.onclick=()=>window.HGQ_AUTH.admin();const o=$("admOut");if(o)o.onclick=()=>window.HGQ_AUTH.out();}''')
+    a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:window.HGQ_AUTH.anon?`<button class="lnk" id="admIn">관리자 로그인</button>`:"";if(a.innerHTML)p.insertBefore(a,p.querySelector(".mnavsp"));
+    const i=$("admIn");if(i)i.onclick=()=>window.HGQ_AUTH.admin();const o=$("admOut");if(o)o.onclick=()=>window.HGQ_AUTH.out();}
+}''')
 rep('''  $("jBack").onclick=()=>{ACC.pending=null;menu()};''','''  $("jBack").onclick=()=>{ACC.pending=null;menu()};
   if(window.HGQ_AUTH&&!window.HGQ_AUTH.isAdmin){const a=document.createElement("div");a.className="admrow";a.innerHTML=`<button class="lnk" id="admIn2">관리자 로그인</button>`;$("panel").appendChild(a);$("admIn2").onclick=()=>window.HGQ_AUTH.admin()}''')
 rep('${LB.room?`<span class="livetag"><i class="dot"></i>실시간</span> `:""}','${LB.room||window.HGQ_WEB?`<span class="livetag"><i class="dot"></i>실시간</span> `:""}')
