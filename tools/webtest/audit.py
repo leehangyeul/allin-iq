@@ -4,7 +4,7 @@ import subprocess,sys,os,re,json,time
 HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.dirname(os.path.dirname(HERE))
 TESTS=[("데이터(카드 중복·빈도 합)","t_chk.py"),("종합 점수·평균 계산","t_avg.py"),("측정 중 플레이어 숨김","t_wait.py"),
  ("가입·이어하기·차단·초기화","t_web2.py"),("종합 5판 규칙","t_all.py"),("20초 타이머","t_timer.py"),("코치 보드","t_coach.py"),("코치 기록 기기 간 합치기","t_coachsync.py"),
- ("코치 상세 분석","t_coachdetail.py"),("결과 카드(F안)","t_resultcards.py"),("시작 화면(D안)","t_home.py"),("프리플랍 정답·차트 일치","t_chartalign.py"),
+ ("코치 상세 분석","t_coachdetail.py"),("결과 카드(F안)","t_resultcards.py"),("시작 화면(D안)","t_home.py"),("프리플랍 정답·차트 일치","t_chartalign.py"),("3벳·4벳 크기 기준","t_stdrules.py"),
  ("전수 풀이(150핸드×4경로+연습400)","t_playall.py")]
 BADWORDS=re.compile(r'Traceback|AssertionError|FAIL|NaN|undefined|✗|❌|오류:|이상 있음')
 res=[]
