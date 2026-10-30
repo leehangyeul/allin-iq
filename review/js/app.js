@@ -212,7 +212,7 @@
       if(G&&!S.active){var needSt=G.runout?[1,2,3].filter(function(s){return !boardReady(s)})[0]:(!G.over&&G.st>0&&!boardReady(G.st)?G.st:null);
         if(needSt&&!S.skipBoard)S.active=boardNeed(needSt).filter(function(k){return S.card[k]===undefined})[0]||null}
       drawTable({setup:true,heroSeat:P("h")?P("h").seat:"BTN",seats:seatsMap()});
-      $("hr-steps").innerHTML=STEPS.map(function(n,i){return '<span class="'+(i<si?"done":i===si?"now":"")+'">'+(i<10?"①②③④⑤⑥⑦⑧⑨⑩"[i]+" ":"")+n+'</span>'}).join("");
+      $("hr-steps").innerHTML='<div class="pg"><span>단계 <b>'+(si+1)+'</b> / '+STEPS.length+'</span><b class="nm">'+STEPS[si]+'</b>'+(si+1<STEPS.length?'<span class="nx">다음: '+STEPS[si+1]+'</span>':'')+'</div><div class="bar" aria-hidden="true">'+STEPS.map(function(n,i){return '<i class="'+(i<si?"d":i===si?"n":"")+'"></i>'}).join("")+'</div>';
       var used={};Object.keys(S.card).forEach(function(k){used[S.card[k]]=1});
       [].forEach.call($("hr-deck").querySelectorAll("button"),function(b){b.disabled=!!used[+b.dataset.c]&&S.card[S.active]!==+b.dataset.c});
       $("hr-deckbox").hidden=!S.active;
@@ -512,8 +512,9 @@
       done();
       var seats=seatsMap(),cardsAll={};ids.forEach(function(k){cardsAll[k]=K[k]});
       TL.forEach(function(e){e.seats=seats;e.cards=cardsAll;e.heroSeat=seats.h});
-      SUM=Object.keys(cnt).map(function(k){var c=cnt[k];return '<span><b>'+nameOf(k)+'</b> <span style="color:var(--felt)">좋음 '+c.good+'</span> · <span style="color:var(--gold)">경계 '+c.mix+'</span> · <span style="color:var(--chip)">개선 '+c.bad+'</span></span>'}).join(" &nbsp; ");
-      SUM='<div class="score">'+(SUM||"평가된 결정이 없습니다.")+'</div><div style="font-size:12.5px;color:var(--muted);margin-top:6px">승률은 몬테카를로 추정이라 다시 계산하면 1~2%p, EV는 조금 더 달라질 수 있습니다. 상대 레인지는 근사 차트에서 시작해 액션마다 좁힌 근사입니다(벳: 플랍·턴 상위 55%·리버 상위 40% + 드로우, 콜: 베팅 크기에 따른 MDF보다 조금 넓게, 레이즈: 상위 30%). 실현율은 리버 1.0, 그 전 IP 0.97·OOP 0.85(멀티웨이는 상대 1명당 −0.04). 간이 EV는 이후 스트리트의 베팅을 반영하지 못하므로, 판정은 EV 차이가 팟의 10% 이내면 ‘좋음’, 25% 이내면 ‘상황에 따라’로 넉넉하게 잡았습니다. 실제 솔버 결과와 다를 수 있습니다.</div>';
+      var sumIds=Object.keys(cnt).sort(function(a,b){return a==="h"?-1:b==="h"?1:a<b?-1:1});
+      SUM=sumIds.map(function(k){var c=cnt[k];return '<div class="pr'+(k==="h"?" h":"")+'"><b>'+nameOf(k)+'</b><span class="t g"><em>'+c.good+'</em>좋음</span><span class="t m"><em>'+c.mix+'</em>경계</span><span class="t b"><em>'+c.bad+'</em>개선</span></div>'}).join("");
+      SUM='<div class="hr-sum2">'+(SUM||'<div class="hr-cap">평가된 결정이 없어요.</div>')+'</div><details class="hr-how"><summary>계산 방법 · 정확도</summary><p>승률은 몬테카를로 추정이라 다시 계산하면 1~2%p, EV는 조금 더 달라질 수 있어요. 상대 레인지는 근사 차트에서 시작해 액션마다 좁힌 근사예요(벳: 플랍·턴 상위 55%·리버 상위 40% + 드로우, 콜: 베팅 크기에 따른 MDF보다 조금 넓게, 레이즈: 상위 30%).</p><p>실현율은 리버 1.0, 그 전 IP 0.97·OOP 0.85(멀티웨이는 상대 1명당 −0.04). 간이 EV는 이후 스트리트의 베팅을 반영하지 못해서, EV 차이가 팟의 10% 이내면 ‘좋음’, 25% 이내면 ‘상황에 따라’로 넉넉하게 잡았어요. 실제 솔버 결과와 다를 수 있어요.</p></details>';
       return null;
     }
     function evTable(rows,mineKey,cap){
@@ -521,23 +522,28 @@
       return '<div><div style="font-size:12.5px;font-weight:700;margin-bottom:4px">액션별 EV</div><table class="hr-evt"><tbody>'+rows.map(function(r){return '<tr class="'+(r===best?'best ':'')+(r[0]===mineKey?'me':'')+'"><td>'+r[0]+(r===best?'<span class="tagb">최고</span>':'')+(r[0]===mineKey?'<span class="tagm">내 선택</span>':'')+'</td><td class="num">'+sgn(r[1])+'</td></tr>'}).join("")+'</tbody></table><div class="hr-cap">'+cap+'</div></div>'}
     function worstOf(e){var o={bad:3,mix:2,good:1},w=null;e.ev.forEach(function(it){if(o[it.vd]&&(!w||o[it.vd]>o[w]))w=it.vd});return w}
     // 전체 해설: 처음부터 리버까지 스트리트별로 한 번에 읽기
+    var VDN={good:"좋은 결정",mix:"상황에 따라",bad:"개선 필요",info:"참고"};
+    function itemTop(it){return '<div class="top"><span class="who'+(it.id!=="h"?" v":"")+'">'+nameOf(it.id)+'</span><span class="bdg '+it.vd+'">'+VDN[it.vd]+'</span></div><b class="ttl">'+it.title+'</b>'}
+    // 숫자(%, BB, %p)는 눈에 잘 띄게: 태그 밖 글자에만 적용
+    function hl(html){return ('>'+String(html)).replace(/>([^<]*)/g,function(m,t){return '>'+t.replace(/([+\-−]?\d+(?:\.\d+)?(?:%p|%|BB))/g,'<span class="n">$1</span>')}).slice(1)}
     function drawStory(){
       if(!TL.length){$("hr-story").innerHTML="";return}
       var VD={good:"좋은 결정",mix:"상황에 따라",bad:"개선 필요",info:"참고"},groups=[],g=null,last=TL[TL.length-1];
       TL.forEach(function(e,k){if(k===TL.length-1)return;if(!g||g.st!==e.st){g={st:e.st,items:[]};groups.push(g)}g.items.push([e,k])});
       function tot(e){var s=e.pot||0;for(var k in e.bets)s+=e.bets[k];return s} // 그 시점까지 들어간 전체 팟
-      function item(it){return '<div class="hr-item '+it.vd+'"><div class="top"><span class="who'+(it.id!=="h"?" v":"")+'">'+nameOf(it.id)+'</span><span class="vd">'+VD[it.vd]+'</span><b>'+it.title+'</b></div><div class="hr-detail">'+it.html+'</div>'+(it.extra?'<details class="hr-more"><summary>근사 차트 · EV 표 보기</summary><div class="hr-two">'+it.extra+'</div></details>':'')+'</div>'}
-      var h='<div class="hr-sumbox"><b>한눈에 보기</b>'+SUM+(last.ev[0]?'<div class="hr-detail" style="margin-top:8px">'+last.ev[0].html+'</div>':'')+'</div>';
+      function item(it){var card='<div class="hr-item '+it.vd+'">'+itemTop(it)+'<div class="hr-detail">'+hl(it.html)+'</div>'+(it.extra?'<details class="hr-more"><summary>근사 차트 · EV 표 보기</summary><div class="hr-two">'+it.extra+'</div></details>':'')+'</div>';
+        return it.id==="h"||it.id===undefined?card:'<details class="hr-vitem '+it.vd+'"><summary><span class="who v">'+nameOf(it.id)+'</span><span class="bdg '+it.vd+'">'+VD[it.vd]+'</span><span class="tt">'+it.title+'</span></summary>'+card+'</details>'}
+      var h='<div class="hr-sumbox"><b class="ttl">한눈에 보기</b>'+(last.ev[0]?'<div class="hr-key">'+last.ev[0].html+'</div>':'')+SUM+'</div><p class="hr-tip">번호를 누르면 그 장면을 테이블로 볼 수 있어요. 빌런의 결정은 눌러서 펼쳐요.</p>';
       groups.forEach(function(gr){
         var e0=gr.items[0][0],eN=gr.items[gr.items.length-1][0],bd=eN.board||[];
         var inHand=Object.keys(e0.seats).filter(function(id){return !(e0.folded&&e0.folded[id])});
         h+='<section class="hr-sst"><div class="hd"><b>'+gr.st+'</b>'+(bd.length?'<span class="bd">'+bd.map(function(c){return cardEl(c)}).join("")+'</span>':'')+'<small>시작 팟 '+bb(tot(e0))+' · '+inHand.length+'명 · '+inHand.map(function(id){return e0.seats[id]+" "+nameOf(id)}).join(", ")+'</small></div>';
         gr.items.forEach(function(x){var e=x[0],k=x[1];
-          h+='<div class="hr-sline'+(e.id==="h"?" h":"")+'"><button type="button" class="hr-sub" data-k="'+k+'" title="테이블에서 보기">▶ '+(k+1)+'</button><span>'+e.label+'</span>'+(e.id?'<small>→ 팟 '+bb(tot(e))+'</small>':'')+'</div>';
+          h+='<div class="hr-sline'+(e.id==="h"?" h":e.id?" v":"")+'"><button type="button" class="hr-no" data-k="'+k+'" aria-label="'+(k+1)+'번 장면 테이블에서 보기">'+(k+1)+'</button><span class="lb">'+e.label+'</span>'+(e.id?'<span class="pt">팟 '+bb(tot(e))+'</span>':'')+'</div>';
           if(e.ev.length)h+=e.ev.map(item).join("");
-          else if(e.id&&!e.cards[e.id])h+='<div class="hr-snote">'+nameOf(e.id)+'의 카드를 몰라 이 결정은 평가하지 않았습니다. 이 액션 뒤로 '+nameOf(e.id)+'의 레인지를 좁혀서 히어로 평가에 씁니다.</div>'});
+          else if(e.id&&!e.cards[e.id])h+='<div class="hr-snote">카드를 몰라 평가하지 않았어요 · 이 액션으로 '+nameOf(e.id)+'의 레인지만 좁혀요</div>'});
         h+='</section>'});
-      h+='<section class="hr-sst end"><div class="hd"><b>결과</b></div><div class="hr-sline"><button type="button" class="hr-sub" data-k="'+(TL.length-1)+'">▶ '+TL.length+'</button><span>'+last.label+'</span></div></section>';
+      h+='<section class="hr-sst end"><div class="hd"><b>결과</b></div><div class="hr-sline res"><button type="button" class="hr-no" data-k="'+(TL.length-1)+'" aria-label="결과 테이블에서 보기">'+TL.length+'</button><span class="lb">'+last.label+'</span></div></section>';
       $("hr-story").innerHTML=h}
     function drawStep(){
       if(!TL.length)return;var e=TL[cur];
@@ -546,7 +552,7 @@
       $("hr-prev").disabled=cur===0;$("hr-next").disabled=cur===TL.length-1;
       $("hr-dots").innerHTML=TL.map(function(x,k){var w=worstOf(x);return '<button type="button" class="'+(w||"")+(k===cur?" cur":"")+'" data-k="'+k+'" aria-label="'+(k+1)+'단계"></button>'}).join("");
       var VD={good:"좋은 결정",mix:"상황에 따라",bad:"개선 필요",info:"참고"};
-      $("hr-evals").innerHTML=e.ev.length?e.ev.map(function(it){return '<div class="hr-item '+it.vd+'"><div class="top"><span class="who'+(it.id!=="h"?" v":"")+'">'+nameOf(it.id)+'</span><span class="vd">'+VD[it.vd]+'</span><b>'+it.title+'</b></div>'+(it.extra?'<div class="hr-two">'+it.extra+'<div class="hr-detail">'+it.html+'</div></div>':'<div class="hr-detail">'+it.html+'</div>')+'</div>'}).join(""):
+      $("hr-evals").innerHTML=e.ev.length?e.ev.map(function(it){return '<div class="hr-item '+it.vd+'">'+itemTop(it)+(it.extra?'<div class="hr-two">'+it.extra+'<div class="hr-detail">'+hl(it.html)+'</div></div>':'<div class="hr-detail">'+hl(it.html)+'</div>')+'</div>'}).join(""):
         '<div class="hr-none">'+(e.id&&!e.cards[e.id]?nameOf(e.id)+"의 카드를 모르면 결정을 평가하지 않습니다. 다음으로 넘어가세요.":"이 단계는 평가할 결정이 없습니다. 다음으로 넘어가세요.")+'</div>';
       $("hr-sumbox").innerHTML=SUM}
     $("hr-prev").addEventListener("click",function(){if(cur>0){cur--;drawStep()}});

@@ -21,17 +21,16 @@
     <a class="hr-home" href="../" target="_top">‹ ALLIN IQ 홈</a>
     <div class="wm"><b>ALLIN <i>IQ</i></b><small>HAND REVIEW</small></div>
     <h1>핸드 복기</h1>
-    <p>① 히어로 자리·카드·스택 → ② 빌런 자리·스택·카드(여러 명) → ③ 게임 시작 → 차례대로 액션, 라운드마다 플랍·턴·리버 카드 → 핸드가 끝나면 처음부터 리버까지 전체 해설.</p>
-    <p>실제 솔버가 아닌 간이 계산입니다. 프리플랍은 근사 차트, 플랍 이후는 직접 계산한 승률과 단순 폴드 모델로 만든 액션별 EV입니다.</p>
-    <details class="hr-what"><summary>근사 차트란?</summary><p>오픈 대응·3벳·4벳 차트는 ALLIN IQ 기준서의 빈도(자리·스택별 3벳·콜·올인 비율)에 맞춰 핸드 강도 순서로 칸을 채운 차트예요. 첫 진입·멀티웨이 차트는 공개 차트의 비율로 만든 근사예요. 솔버가 계산한 정답이 아니어서, 실제 솔버와 칸 몇 개가 다를 수 있어요. 칸 색은 그 핸드의 대표 행동(빨강 밸류, 금색 블러프, 파랑 콜, 연한 칸 섞기)이고 빈도가 아니에요.</p><p>지금 기준: 20~35BB에서 IP가 앞·중간 포지션(UTG~HJ) 오픈에 3벳할 때는 올인 대신 작은 3벳(오픈의 약 2.5배), 40BB 4벳은 3벳의 약 2배, 75BB 이상 4벳은 3벳의 2.5~2.75배예요. ICM 가산은 머니 근처 +3%p, 버블 +7%p, 파이널 +4%p예요.</p></details>
+    <p class="hr-lead">실제로 친 핸드를 넣으면 프리플랍부터 리버까지 결정마다 해설해요.</p>
+    <details class="hr-what"><summary>어떻게 계산하나요?</summary><p><b>순서</b> ① 히어로 자리·카드·스택 → ② 빌런 자리·스택·카드(여러 명) → ③ 게임 시작 → 차례대로 액션, 라운드마다 플랍·턴·리버 카드 → 핸드가 끝나면 전체 해설.</p><p><b>계산</b> 실제 솔버가 아닌 간이 계산이에요. 프리플랍은 근사 차트, 플랍 이후는 직접 계산한 승률과 단순 폴드 모델로 만든 액션별 EV예요.</p><p><b>근사 차트</b> 오픈 대응·3벳·4벳 차트는 ALLIN IQ 기준서의 빈도(자리·스택별 3벳·콜·올인 비율)에 맞춰 핸드 강도 순서로 칸을 채운 차트예요. 첫 진입·멀티웨이 차트는 공개 차트의 비율로 만든 근사예요. 솔버가 계산한 정답이 아니어서, 실제 솔버와 칸 몇 개가 다를 수 있어요. 칸 색은 그 핸드의 대표 행동(빨강 밸류, 금색 블러프, 파랑 콜, 연한 칸 섞기)이고 빈도가 아니에요.</p><p><b>지금 기준</b> 20~35BB에서 IP가 앞·중간 포지션(UTG~HJ) 오픈에 3벳할 때는 올인 대신 작은 3벳(오픈의 약 2.5배), 40BB 4벳은 3벳의 약 2배, 75BB 이상 4벳은 3벳의 2.5~2.75배예요. ICM 가산은 머니 근처 +3%p, 버블 +7%p, 파이널 +4%p예요.</p></details>
   </header>
   <div class="tool hr" id="hand-review">
-        <div class="hr-tabs" role="tablist">
+        <div class="hr-tabs main" role="tablist">
           <button type="button" role="tab" id="hr-tab-in" aria-selected="true">① 핸드 입력</button>
           <button type="button" role="tab" id="hr-tab-rv" aria-selected="false">② 복기 보기</button>
           <button type="button" role="tab" id="hr-tab-my" aria-selected="false">내 복기 <b id="hr-mycnt"></b></button>
-          <button type="button" class="hr-sub" id="hr-ex" style="margin-left:auto">예시 핸드로 보기</button>
         </div>
+        <div class="hr-exrow"><button type="button" class="hr-link" id="hr-ex">예시 핸드로 보기 ›</button></div>
         <div class="hr-table" id="hr-table" aria-label="포커 테이블"></div>
 
         <div id="hr-setup">
@@ -59,7 +58,7 @@
         </div>
 
         <div id="hr-replay" hidden>
-          <div class="hr-tabs" role="tablist" style="justify-content:center;margin-top:10px">
+          <div class="hr-tabs view" role="tablist">
             <button type="button" role="tab" id="hr-v-story" aria-selected="true">전체 해설</button>
             <button type="button" role="tab" id="hr-v-step" aria-selected="false">한 단계씩 보기</button>
           </div>
@@ -99,7 +98,7 @@
 </div>
 <script>
 // opened on its own (not inside the app): show the link back to the app; no copying on the player screen
-if(window.top===window)document.documentElement.classList.add("solo");
+document.documentElement.classList.add(window.top===window?"solo":"inapp");
 document.addEventListener("contextmenu",e=>{if(!(e.target&&e.target.tagName==="INPUT"))e.preventDefault()});
 document.addEventListener("copy",e=>{const t=e.target;if(!(t&&t.tagName==="INPUT"))e.preventDefault()});
 </script>

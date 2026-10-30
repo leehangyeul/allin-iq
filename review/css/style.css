@@ -244,3 +244,95 @@ button.hrc{cursor:pointer;font:inherit;font-family:var(--f-mono);font-weight:700
 .hr-sheetmsg:empty{display:none}
 .hr-sheetbtns{display:grid;grid-template-columns:1fr 2fr;gap:8px}
 .hr-sheetbtns button{min-height:50px;font-size:16px}
+
+/* ---------- 가독성 (10/30) ---------- */
+.inapp .app > header .wm,.inapp .app > header h1{display:none}
+.inapp body,.inapp .app{padding-top:0}
+.hr-lead{font-size:15px!important;color:#C9C3B8!important;margin:2px 0 8px!important}
+.hr-what{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--sheet)}
+.hr-what summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--gold)}
+.hr-what p{font-size:13.5px;line-height:1.7;color:#C9C3B8;margin:8px 0 0}
+.hr-what p b{color:var(--ink)}
+/* 탭: 세 칸 같은 폭 */
+.hr-tabs.main{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:6px}
+.hr-tabs.main button{min-height:46px;padding:0 6px;border-radius:12px;font-size:14px;white-space:nowrap}
+.hr-exrow{display:flex;justify-content:flex-end;margin:0 0 6px}
+.hr-link{font:inherit;font-size:13.5px;font-weight:700;color:var(--gold);background:none;border:0;padding:8px 4px;cursor:pointer;min-height:40px}
+.hr-tabs.view{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:360px;margin:8px auto 12px;padding:4px;border-radius:999px;background:var(--paper);border:1px solid var(--line)}
+.hr-tabs.view button{border:0;min-height:40px;border-radius:999px;background:transparent;color:#C9C3B8}
+.hr-tabs.view button[aria-selected="true"]{background:var(--felt);color:var(--sheet)}
+/* 진행 단계: 한 줄 + 막대 */
+.hr-steps{display:block;margin:10px auto 8px;max-width:760px}
+.hr-steps .pg{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.hr-steps .pg b{color:var(--ink)}
+.hr-steps .pg .nm{font-size:16px;color:var(--gold)}
+.hr-steps .pg .nx{margin-left:auto}
+.hr-steps .bar{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:6px}
+.hr-steps .bar i{height:5px;border-radius:3px;background:var(--line)}
+.hr-steps .bar i.d{background:#6E5A3A}.hr-steps .bar i.n{background:var(--felt)}
+/* 요약 */
+.hr-story .hr-sumbox,.hr-sumbox{padding:14px;border-radius:14px}
+.hr-sumbox .ttl{display:block;font-size:13px;letter-spacing:.04em;color:var(--felt);margin-bottom:6px}
+.hr-key{font-size:15.5px;line-height:1.65;color:var(--ink);margin-bottom:10px}
+.hr-key p{margin:0 0 4px}
+.hr-sum2{display:flex;flex-direction:column;gap:8px}
+.hr-sum2 .pr{display:grid;grid-template-columns:64px repeat(3,minmax(0,1fr));gap:6px;align-items:center}
+.hr-sum2 .pr > b{font-size:14px}
+.hr-sum2 .pr.h > b{color:var(--felt)}
+.hr-sum2 .t{display:flex;align-items:baseline;justify-content:center;gap:4px;padding:6px 4px;border-radius:10px;background:#121722;font-size:12px;color:var(--muted)}
+.hr-sum2 .t em{font-style:normal;font-family:var(--f-mono);font-weight:700;font-size:18px}
+.hr-sum2 .t.g em{color:#8FD3A6}.hr-sum2 .t.m em{color:var(--gold)}.hr-sum2 .t.b em{color:#F3A08A}
+.hr-sum2 .pr:not(.h) .t em{font-size:15px}
+.hr-how{margin-top:10px}
+.hr-how summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--muted)}
+.hr-how p{font-size:13px;line-height:1.7;color:var(--muted);margin:6px 0 0}
+.hr-tip{font-size:12.5px;color:var(--muted);margin:8px 2px 0;text-align:center}
+/* 스트리트 머리: 스크롤해도 위에 붙어 있음 */
+.hr-sst{gap:10px;border-top:0;padding-top:0;margin-top:14px}
+.hr-sst .hd{position:sticky;top:0;z-index:4;background:var(--sheet);padding:10px 0 8px;border-bottom:2px solid var(--felt)}
+.hr-sst .hd > b{font-size:19px}
+/* 액션 줄: 번호 원 + 액션 + 팟 */
+.hr-sline{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:15px;padding:2px 0}
+.hr-sline .lb{font-weight:700;line-height:1.4}
+.hr-sline.h .lb{color:var(--felt)}
+.hr-sline.v .lb{color:#E6D9CC}
+.hr-sline .pt{font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap}
+.hr-sline.res{grid-template-columns:32px minmax(0,1fr)}
+.hr-sline.res .lb{font-size:15.5px;color:var(--ink)}
+.hr-no{width:32px;height:32px;border-radius:50%;border:1px solid #3A3F4B;background:var(--paper);color:var(--ink);font:inherit;font-family:var(--f-mono);font-size:12.5px;font-weight:700;cursor:pointer;padding:0}
+.hr-sline.h .hr-no{border-color:var(--felt);color:var(--felt)}
+.hr-no:hover{border-color:var(--gold)}
+/* 평가 카드 */
+.hr-item{border-radius:12px;padding:12px 14px 12px 16px;border-left-width:5px}
+.hr-item .top{margin-bottom:6px}
+.hr-item .ttl{display:block;font-size:16px;line-height:1.4;margin-bottom:2px}
+.bdg{font-size:12.5px;font-weight:800;padding:2px 10px;border-radius:999px}
+.bdg.good{background:#132A1D;color:#8FD3A6}.bdg.mix{background:#2A2214;color:var(--gold)}.bdg.bad{background:#33170F;color:#F3A08A}.bdg.info{background:#1A1F2B;color:var(--muted)}
+.hr-detail{font-size:15px;line-height:1.75;color:#E4E0D8}
+.hr-detail p{margin:0 0 10px}.hr-detail p:last-child{margin-bottom:0}
+.hr-detail b{color:var(--ink)}
+.hr-detail .n{font-family:var(--f-mono);font-weight:700;font-size:.93em;color:var(--gold);white-space:nowrap}
+.hr-more{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.hr-more summary{min-height:36px;display:flex;align-items:center}
+/* 빌런 결정: 접어 두고 눌러서 펼침 */
+.hr-vitem{border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.hr-vitem > summary{list-style:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;cursor:pointer;font-size:13.5px;min-height:24px}
+.hr-vitem > summary::-webkit-details-marker{display:none}
+.hr-vitem > summary::after{content:"펼치기 ›";margin-left:auto;font-size:12px;color:var(--muted)}
+.hr-vitem[open] > summary::after{content:"접기"}
+.hr-vitem > summary .tt{color:#C9C3B8}
+.hr-vitem[open] > summary .tt{display:none}
+.hr-vitem > .hr-item{border:0;border-top:1px solid var(--line);border-radius:0 0 12px 12px}
+.hr-vitem > .hr-item .top{display:none}
+.hr-snote{font-size:12.5px;padding:0 0 0 42px;border-left:0;color:var(--muted)}
+/* 한 단계씩 보기 */
+.hr-stepname{font-size:16px}
+.hr-nav button{min-height:44px}
+.hr-dots{gap:7px}.hr-dots button{width:16px;height:16px}
+/* 숨긴 영역은 확실히 숨김(전체 해설이 한 단계씩 보기에 남던 문제) */
+[hidden]{display:none!important}
+/* 액션 말풍선이 카드 뒤로 숨지 않게 */
+.hr-seat.act{z-index:6}
+.hr-say{box-shadow:0 2px 8px rgba(0,0,0,.5)}
+/* 폰에서는 해설 글이 먼저, 차트는 그 아래 */
+@media (max-width:640px){.hr-two > .hr-detail{order:-1}}
