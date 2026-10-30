@@ -128,6 +128,14 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 .hmst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:16px;background:#0F1729;padding:12px 0}
 .hmst div{display:flex;flex-direction:column;align-items:center;gap:2px}.hmst div+div{border-left:1px solid #1E2940}
 .hmst b{font-family:var(--num);font-size:22px;color:#F0D7AE}.hmst span{font-size:12px;color:#A9B2C3}
+.hmrv{border-radius:18px;min-height:84px;padding:12px 18px;background:linear-gradient(160deg,#2B2519,#121010);border:1px solid rgba(212,175,124,.5);color:#F8F9FB;display:flex;align-items:center;gap:14px;text-align:left;width:100%}
+.hmrv .ic{flex:none;width:52px;height:36px;border-radius:18px;background:radial-gradient(ellipse at 50% 38%,#25211A,#0B0A08);box-shadow:inset 0 0 0 1.5px rgba(212,175,124,.6)}
+.hmrv .t{flex:1;display:flex;flex-direction:column;gap:3px}.hmrv b{font-size:17px}.hmrv small{font-size:12px;line-height:1.5;color:#C9C3B8}
+#hrov{position:fixed;inset:0;z-index:900;background:#07090F;display:flex;flex-direction:column}
+#hrov .hrbar{flex:none;display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 10px;background:#0A0D14;box-shadow:0 1px 0 #1A1F2B}
+#hrov .hrbar button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid #3A3F4B;background:transparent;color:#EAD3AE;font-size:14px;font-weight:700}
+#hrov .hrbar span{font-size:15px;font-weight:700;color:#F8F9FB}
+#hrov iframe{flex:1;width:100%;border:0;background:#07090F}
 .mnavsp{height:84px}
 .mnav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,420px);box-sizing:border-box;z-index:20;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px));background:#0A0F1B;box-shadow:0 -1px 0 #1E2940}
 @media (min-width:600px){.mnav{width:min(100%,560px)}}
@@ -752,7 +760,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202610292230";
+window.HGQ_WEB=true;window.APP_VERSION="202610300906";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2929,12 +2937,24 @@ function menu(){
       <div class="rc"><span class="rl">종합 점수</span>${m.ready?`<span class="rv">${m.ta}</span>${m.tt}`:`<span class="rv m">측정 중</span>`}</div></div><span class="rs">${ringSub}</span></div>
     <button class="hmcta" id="go" type="button"><span class="t"><b>핸드 퀴즈 ${STATS.n?"이어서":"시작"}</b><small>${STATS.n?`${STATS.n}판 완료 · 평균 ${m.ha}`:"첫 판을 시작해 보세요"}</small></span><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
     <button class="hmsub" id="go2" type="button"><span class="t"><b>오픈 연습 ${DSTATS.n?"이어서":"시작"}</b><small>${DSTATS.n?`${DSTATS.n}판 완료 · 평균 ${m.da}`:"첫 판을 시작해 보세요"}</small></span><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#D4AF7C" stroke-width="2.2" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
+    <button class="hmrv" id="goRv" type="button"><span class="ic" aria-hidden="true"></span><span class="t"><b>실전 핸드 복기</b><small>펍에서 친 핸드를 넣으면 결정마다 해설해요</small></span><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#D4AF7C" stroke-width="2.2" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
     <div class="hmst"><div><b>${STATS.streak}</b><span>연속 90점+</span></div><div><b>${Math.max(STATS.best,DSTATS.best)}</b><span>최고 연속</span></div><div><b>${myRankText()}</b><span>내 종합 순위</span></div></div>
     </div>${menuNav("home")}`;
   menuNavBind();
   $("go").onclick=()=>gateGo(()=>start(0));
   $("go2").onclick=()=>gateGo(()=>drillStart());
+  $("goRv").onclick=()=>reviewOpen();
 }
+// hand review: its own page (review/index.html) shown over the home screen; closing returns to the same home
+const REVIEW_URL="review/index.html";
+function reviewOpen(){
+  if(document.getElementById("hrov"))return;
+  const d=document.createElement("div");d.id="hrov";d.setAttribute("role","dialog");d.setAttribute("aria-label","핸드 복기");
+  d.innerHTML=`<div class="hrbar"><button type="button" id="hrClose">‹ 홈</button><span>실전 핸드 복기</span></div><iframe id="hrFrame" title="핸드 복기" src="${REVIEW_URL}"></iframe>`;
+  document.body.appendChild(d);
+  document.getElementById("hrClose").onclick=reviewClose;
+}
+function reviewClose(){const d=document.getElementById("hrov");if(d)d.remove()}
 function moreBind(){
   if(window.HGQ_AUTH){const p=$("panel");const a=document.createElement("div");a.className="admrow";
     a.innerHTML=window.HGQ_AUTH.isAdmin?`<span>${esc(window.HGQ_AUTH.email)}</span><button class="lnk" id="admOut">관리자 로그아웃</button>`:window.HGQ_AUTH.anon?`<button class="lnk" id="admIn">관리자 로그인</button>`:"";if(a.innerHTML)p.insertBefore(a,p.querySelector(".mnavsp"));
@@ -3107,7 +3127,7 @@ chartAlign();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202610292230"></script>
+<script src="webgate.js?v=202610300906"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
