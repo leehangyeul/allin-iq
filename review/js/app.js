@@ -123,13 +123,21 @@
     function alive(G){return Object.keys(G.pl).filter(function(k){return !G.pl[k].folded})}
     function pot(G){var s=G.dead;for(var k in G.pl)s+=G.pl[k].inv;return s}
     function streetPot(G){var s=pot(G);for(var k in G.pl)s-=G.pl[k].sb;return s}
+    // 메인 팟·사이드 팟: 남은 사람들의 총 투입액 단계별로 나누고, 한 사람만 낸 맨 위 금액(콜받지 않은 베팅)은 돌려줘요
+    function pots(G){var ids=Object.keys(G.pl),lv=[];ids.forEach(function(k){var p=G.pl[k];if(!p.folded&&lv.indexOf(p.inv)<0)lv.push(p.inv)});lv.sort(function(a,b){return a-b});
+      var out=[],prev=0;lv.forEach(function(L,i){var amt=i===0?G.dead:0;ids.forEach(function(k){var v=G.pl[k].inv;amt+=Math.max(0,Math.min(v,L)-Math.min(v,prev))});
+        out.push({amt:amt,el:ids.filter(function(k){return !G.pl[k].folded&&G.pl[k].inv>=L-1e-9})});prev=L});
+      var back=null;if(out.length>1&&out[out.length-1].el.length===1)back=out.pop();
+      var sum=0;out.forEach(function(x){sum+=x.amt});if(back)sum+=back.amt;if(out.length)out[out.length-1].amt+=pot(G)-sum; // 접은 사람이 더 많이 낸 몫
+      return {pots:out,back:back}}
+    function livePot(G){var r=pots(G),s=0;r.pots.forEach(function(x){s+=x.amt});return s}
     function toCall(G,p){return Math.max(0,Math.min(G.cur-p.sb,p.live-p.inv))}
     function apply(G,a){
       var p=G.pl[a.id];
       if(a.t==="fold")p.folded=true;
       else if(a.t==="call")put(G,p,toCall(G,p));
       else if(a.t==="raise"){var maxTo=p.sb+(p.live-p.inv),to=Math.min(Math.max(a.to,G.cur+G.minR),maxTo);if(a.to>=maxTo-1e-9)to=maxTo;
-        if(to>G.cur+1e-9){G.minR=Math.max(G.minR,to-G.cur);G.cur=to;G.raises++;G.raisers.push(a.id);G.callers=[];G.lastAgg=a.id;if(G.st===0)G.preAgg=a.id;for(var k in G.pl)if(k!==a.id)G.pl[k].acted=false}
+        if(to>G.cur+1e-9){var full=to-G.cur>=G.minR-1e-9;G.minR=Math.max(G.minR,to-G.cur);G.cur=to;G.raises++;G.raisers.push(a.id);G.callers=[];G.lastAgg=a.id;if(G.st===0)G.preAgg=a.id;if(full)for(var k in G.pl)if(k!==a.id)G.pl[k].acted=false} // 최소 레이즈보다 작은 올인은 이미 액션한 사람에게 다시 레이즈할 권리를 주지 않아요
         put(G,p,to-p.sb)}
       if(a.t==="call")G.callers.push(a.id);
       p.acted=true;
@@ -228,7 +236,7 @@
       } else if(ended){
         var needB=G.runout&&[1,2,3].some(function(s){return !boardReady(s)});
         var who=alive(G);
-        g='<b>'+(needB?STEPS[si]+" 카드 넣기":"핸드 끝")+'</b><p>'+(who.length===1?gaOf(who[0])+" 팟 "+bb(pot(G))+"을 가져갔습니다.":needB?"올인으로 남은 액션이 없습니다. 남은 보드 카드를 넣으면 쇼다운 결과까지 해설합니다.":"쇼다운입니다. 팟 "+bb(pot(G))+".")+'</p>'+
+        g='<b>'+(needB?STEPS[si]+" 카드 넣기":"핸드 끝")+'</b><p>'+(who.length===1?gaOf(who[0])+" 팟 "+bb(pot(G))+"를 가져갔습니다.":needB?"올인으로 남은 액션이 없습니다. 남은 보드 카드를 넣으면 쇼다운 결과까지 해설합니다.":"쇼다운입니다. 팟 "+bb(livePot(G))+"."+(pots(G).back?" (콜받지 않은 "+bb(pots(G).back.amt)+"는 "+nameOf(pots(G).back.el[0])+"에게 돌아감)":""))+'</p>'+
           '<div class="hr-btns">'+(needB?'<button type="button" class="hr-sub" data-go="noboard">보드 없이 결과 보기</button>':'')+'<button type="button" class="hr-go" data-go="result">결과와 전체 해설 보기 ▶</button></div>';
       } else if(G.st>0&&!boardReady(G.st)){
         g='<b>'+"①②③④⑤⑥⑦⑧⑨⑩"[si]+' '+STN[G.st]+' 카드 넣기</b><p>'+(G.st===1?"플랍 카드 3장":G.st===2?"턴 카드 1장":"리버 카드 1장")+'을 아래 카드판에서 고르세요. 팟 '+bb(pot(G))+', 남은 인원 '+alive(G).length+'명.</p>';
@@ -246,8 +254,8 @@
           var def=G.st===0?(G.raises===0?2.2:Math.round(G.cur*3*10)/10):(G.cur===0?Math.round(pt*0.5*10)/10:Math.round(G.cur*3*10)/10);
           body='<div class="now">'+STN[G.st]+' · '+p2.seat+' '+nameOf(p2.id)+' 차례<small>팟 '+bb(pt)+(tc>0?' · 콜 '+bb(tc):'')+' · 남은 스택 '+bb(p2.live-p2.inv)+'</small></div>'+
             '<div class="hr-acts">'+(tc>0?'<button type="button" class="f" data-act="fold">폴드</button>':'')+(tc>0?'<button type="button" class="c" data-act="call">콜 '+bb(tc)+'</button>':'<button type="button" class="c" data-act="check">체크</button>')+
-            (maxTo>G.cur+1e-9?'<button type="button" class="r" data-act="raise">'+(G.st===0?(G.raises===0?"오픈":(G.raises+2)+"벳"):(G.cur===0?"벳":"레이즈"))+'</button>':'')+'</div>'+
-            (maxTo>G.cur+1e-9?'<div class="hr-size"><label for="hr-amt">크기(BB, 총액)</label><input id="hr-amt" type="number" step="0.1" min="0" value="'+Math.min(def,Math.round(maxTo*10)/10)+'">'+
+            (maxTo>G.cur+1e-9&&!p2.acted?'<button type="button" class="r" data-act="raise">'+(G.st===0?(G.raises===0?"오픈":(G.raises+2)+"벳"):(G.cur===0?"벳":"레이즈"))+'</button>':'')+'</div>'+
+            (maxTo>G.cur+1e-9&&!p2.acted?'<div class="hr-size"><label for="hr-amt">크기(BB, 총액)</label><input id="hr-amt" type="number" step="0.1" min="0" value="'+Math.min(def,Math.round(maxTo*10)/10)+'">'+
               (G.st===0?[["2BB",2],["2.2BB",2.2],["2.5BB",2.5],["3배",G.cur*3],["올인",maxTo]]:[["33%",pt*0.33],["50%",pt*0.5],["75%",pt*0.75],["팟",pt],["3배",G.cur*3],["올인",maxTo]]).filter(function(x){return x[1]>G.cur+1e-9||x[0]==="올인"}).map(function(x){return '<button type="button" data-q="'+Math.min(Math.round((G.st===0||x[0]==="올인"||x[0]==="3배"?x[1]:x[1]+p2.sb)*10)/10,Math.round(maxTo*10)/10)+'">'+x[0]+'</button>'}).join("")+'</div>':'')}
         body+='<div class="hr-log">'+(lg||'<div class="hr-cap">프리플랍부터 차례대로 누르세요. 핸드에 없는 자리는 자동으로 폴드 처리됩니다.</div>')+'</div>'+
           (S.acts.length?'<div class="hr-tools"><button type="button" class="hr-sub" id="hr-undo">↶ 되돌리기</button></div>':'');
@@ -490,8 +498,13 @@
       var live=alive(G),potEnd=pot(G),res;
       if(live.length===1)res=gaOf(live[0])+" 팟 "+bb(potEnd)+" 획득";
       else{var known2=live.filter(function(k){return K[k]});
-        if(board.length===5&&known2.length===live.length){var sc=live.map(function(k){return [k,ev(K[k].concat(board))]}).sort(function(x,y){return y[1]-x[1]});res="쇼다운: "+sc.map(function(x){return nameOf(x[0])+" "+CATN[catOf(x[1])]}).join(" · ")+" → "+(sc.length>1&&sc[0][1]===sc[1][1]?"찹":nameOf(sc[0][0])+" 승")+" (팟 "+bb(potEnd)+")"}
-        else res="쇼다운 (팟 "+bb(potEnd)+")"+(known2.length<live.length?" · 모르는 카드가 있어 승자는 표시하지 않습니다":"")}
+        var PT=pots(G),backTxt=PT.back?" · 콜받지 않은 "+bb(PT.back.amt)+"는 "+nameOf(PT.back.el[0])+"에게 돌아감":"";
+        if(board.length===5&&known2.length===live.length){var scm={};live.forEach(function(k){scm[k]=ev(K[k].concat(board))});
+          var sc=live.slice().sort(function(x,y){return scm[y]-scm[x]});
+          var potTxt=PT.pots.map(function(x,i){var best=Math.max.apply(null,x.el.map(function(k){return scm[k]})),w=x.el.filter(function(k){return scm[k]===best});
+            return (PT.pots.length>1?(i===0?"메인 팟 ":"사이드 팟"+(PT.pots.length>2?" "+i:"")+" ")+bb(x.amt)+" ":"")+(w.length>1?w.map(nameOf).join("·")+" 찹":nameOf(w[0])+" 승")+(PT.pots.length>1?"":" (팟 "+bb(x.amt)+")")});
+          res="쇼다운: "+sc.map(function(k){return nameOf(k)+" "+CATN[catOf(scm[k])]}).join(" · ")+" → "+potTxt.join(" · ")+backTxt}
+        else res="쇼다운 (팟 "+bb(livePot(G))+")"+(PT.pots.length>1?" · 메인 팟 "+bb(PT.pots[0].amt)+" + 사이드 팟 "+bb(livePot(G)-PT.pots[0].amt):"")+(known2.length<live.length?" · 모르는 카드가 있어 승자는 표시하지 않습니다":"")+backTxt}
       step(res,live.length===1?live[0]:null,null);
       var cnt={},worst=[];TL.forEach(function(e){e.ev.forEach(function(it){if(it.vd==="info")return;cnt[it.id]=cnt[it.id]||{good:0,mix:0,bad:0};cnt[it.id][it.vd]++;if(it.vd==="bad")worst.push(nameOf(it.id)+" · "+e.st+" "+e.label)})});
       add("h","info","복기 요약","<p>결과보다 결정을 보세요. "+(worst.length?"개선이 필요한 결정: "+worst.join(" / ")+".":"개선이 필요한 결정은 없었습니다.")+"</p>"+(ids.some(function(k){return k!=="h"&&!K[k]})?"<p>카드를 모르는 빌런의 결정은 평가하지 않았습니다. 카드를 넣으면 그 빌런도 평가합니다.</p>":""));
