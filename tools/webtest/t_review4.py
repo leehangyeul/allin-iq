@@ -49,6 +49,22 @@ async def main():
                 await fr.evaluate("()=>document.getElementById('hr-next').click()")
             t=await fr.evaluate("()=>document.getElementById('hr-evals').innerText+document.getElementById('hr-stepname').innerText")
             if re.search(r'NaN|undefined|\[object',t):bad.append(f'{w}: 한 단계 화면에 NaN')
+            # 한 단계씩 보기는 목록(C안): 장면마다 참여자 줄, 한 줄 안의 칸끼리 겹치지 않고 넘치지 않음, 지금 차례 줄 강조
+            nsteps=await fr.evaluate("()=>document.querySelectorAll('#hr-dots button').length")
+            for k in range(nsteps):
+                await fr.evaluate("(k)=>document.querySelectorAll('#hr-dots button')[k].click()",k)
+                L=await fr.evaluate("""()=>{const t=document.getElementById('hr-table');const rows=[...t.querySelectorAll('.hl-row')];const bad=[];
+                  rows.forEach((r,i)=>{const rr=r.getBoundingClientRect();const kids=[...r.children].map(c=>c.getBoundingClientRect()).filter(b=>b.width>0);
+                    for(let a=0;a<kids.length;a++){if(kids[a].right>rr.right+0.5||kids[a].left<rr.left-0.5)bad.push('넘침'+i);for(let b=a+1;b<kids.length;b++)if(kids[a].right>kids[b].left+0.5&&kids[a].left<kids[b].right-0.5)bad.push('겹침'+i)}});
+                  return {list:t.classList.contains('list'),rows:rows.length,bad,cur:t.querySelectorAll('.hl-row.cur').length,txt:t.innerText,seats:t.querySelectorAll('.hr-seat').length}}""")
+                if not L['list'] or L['seats']:bad.append(f'{w} 장면{k+1}: 목록이 아님');break
+                if L['rows']!=3:bad.append(f'{w} 장면{k+1}: 줄 {L["rows"]}')
+                if L['bad']:bad.append(f'{w} 장면{k+1}: {L["bad"][:3]}')
+                if re.search(r'NaN|undefined|\[object',L['txt']):bad.append(f'{w} 장면{k+1}: NaN')
+            # 입력 화면은 9자리 테이블 그대로
+            await fr.evaluate("()=>document.getElementById('hr-tab-in').click()");await asyncio.sleep(.2)
+            if await fr.evaluate("()=>document.getElementById('hr-table').classList.contains('list')||document.querySelectorAll('#hr-table .hr-seat').length!==9"):bad.append(f'{w}: 입력 화면 테이블이 바뀜')
+            await fr.evaluate("()=>{document.getElementById('hr-tab-rv').click()}");await asyncio.sleep(.3)
             # 말풍선이 카드보다 위
             await fr.evaluate("()=>{document.getElementById('hr-v-step').click();document.querySelectorAll('#hr-dots button')[3].click()}");await asyncio.sleep(.2)
             z=await fr.evaluate("()=>{const s=document.querySelector('.hr-say');if(!s)return null;const r=s.getBoundingClientRect();const el=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return el&&(el===s||s.contains(el))}")

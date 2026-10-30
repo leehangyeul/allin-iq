@@ -167,7 +167,26 @@
       if(c===undefined||c===null)return '<span class="hrc back"></span>';
       return '<span class="hrc'+(isRed(c)?' red':'')+'">'+RS[c>>2]+'<br>'+SYM[c&3]+'</span>'}
     // st: {setup, heroSeat, seats:{id:seat}, stacks, bets, pot, board, cards, folded{id:1}, actor, say}
+    // 복기 화면(한 단계씩 보기): 테이블 대신 보드·팟 한 칸 + 참여자 한 줄씩(C안). 입력 화면은 9자리 테이블 그대로.
+    var POST=["SB","BB","UTG","UTG+1","UTG+2","LJ","HJ","CO","BTN"];
+    function drawList(st){
+      var ids=Object.keys(st.seats),ord=st.st==="프리플랍"?PRE:POST,tot=st.pot||0,el=$("hr-table");
+      ids.forEach(function(id){tot+=(st.bets&&st.bets[id])||0});
+      ids.sort(function(a,b){return ord.indexOf(st.seats[a])-ord.indexOf(st.seats[b])});
+      var live=ids.filter(function(id){return !(st.folded&&st.folded[id])}).length,bd="";
+      for(var i=0;i<5;i++)bd+=st.board&&st.board[i]!==undefined?cardEl(st.board[i]):'<span class="hrc slot"></span>';
+      var h='<div class="hl-top"><span class="hl-meta">'+(st.st||"")+' · 9인 · '+ids.length+'명 참여'+(live<ids.length?' · 남은 '+live+'명':'')+'</span><div class="hl-board">'+bd+'</div><b class="hl-pot">팟 '+bb(tot)+'</b></div><div class="hl-rows">';
+      ids.forEach(function(id){var seat=st.seats[id],fold=st.folded&&st.folded[id],cur=st.actor===id,cc=st.cards&&st.cards[id];
+        var left=st.stacks?st.stacks[id]:null,act=st.last&&st.last[id],allin=left!==null&&left<=1e-9&&!fold;
+        var pill=cur&&st.say?st.say.text:fold?"폴드":allin?"올인":act?act:(st.bets&&st.bets[id]>0?bb(st.bets[id]):"");
+        h+='<div class="hl-row'+(id==="h"?" h":" v")+(cur?" cur":"")+(fold?" out":"")+'"><span class="hl-seat"><b>'+seat+'</b>'+(seat==="BTN"?'<small>딜러</small>':'')+'</span>'+
+          '<span class="hl-cards">'+(cc?cardEl(cc[0])+cardEl(cc[1]):cardEl(null)+cardEl(null))+'</span>'+
+          '<span class="hl-who"><b>'+nameOf(id)+'</b><small>'+(left!==null?bb(left):"")+'</small></span>'+
+          (pill?'<span class="hl-act'+(cur?" on":"")+'">'+pill+'</span>':'<span></span>')+'</div>'});
+      el.innerHTML=h+'</div>';el.classList.add("list")}
     function drawTable(st){
+      if(!st.setup)return drawList(st);
+      $("hr-table").classList.remove("list");
       var R={x:45,y:43},html='<div class="hr-felt"></div>',bySeat={};
       Object.keys(st.seats).forEach(function(id){bySeat[st.seats[id]]=id});
       var hs=st.heroSeat||"BTN";
@@ -547,7 +566,9 @@
       $("hr-story").innerHTML=h}
     function drawStep(){
       if(!TL.length)return;var e=TL[cur];
-      drawTable({setup:false,heroSeat:e.heroSeat,seats:e.seats,stacks:e.stacks,bets:e.bets,pot:e.pot,board:e.board,cards:e.cards,folded:e.folded,actor:e.id,say:e.say});
+      // 이번 스트리트에서 각자 마지막으로 한 액션(현재 장면까지)
+      var last={};for(var q=0;q<=cur;q++){var x=TL[q];if(x.st!==e.st)continue;if(x.say&&x.say.id)last[x.say.id]=x.say.text}
+      drawTable({setup:false,st:e.st,heroSeat:e.heroSeat,seats:e.seats,stacks:e.stacks,bets:e.bets,pot:e.pot,board:e.board,cards:e.cards,folded:e.folded,actor:e.id,say:e.say,last:last});
       $("hr-stepname").innerHTML=(cur+1)+" / "+TL.length+" · "+e.st+"<small>"+e.label+"</small>";
       $("hr-prev").disabled=cur===0;$("hr-next").disabled=cur===TL.length-1;
       $("hr-dots").innerHTML=TL.map(function(x,k){var w=worstOf(x);return '<button type="button" class="'+(w||"")+(k===cur?" cur":"")+'" data-k="'+k+'" aria-label="'+(k+1)+'단계"></button>'}).join("");
