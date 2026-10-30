@@ -299,8 +299,9 @@
     $("hr-plist").addEventListener("click",function(e){var id=e.target.dataset.rm;if(!id)return;S.pl=S.pl.filter(function(p){return p.id!==id});delete S.card[id+"1"];delete S.card[id+"2"];drawSetup()});
     $("hr-ante").addEventListener("change",drawSetup);
     ["hr-left","hr-paid","hr-ft"].forEach(function(id){$(id).addEventListener("change",drawSetup)});
-    $("hr-reset").addEventListener("click",function(){S={pl:[],card:{},active:null,acts:[],phase:"hero"};hint("");showTab("in")});
-    function showTab(w){$("hr-tab-in").setAttribute("aria-selected",w==="in");$("hr-tab-rv").setAttribute("aria-selected",w==="rv");$("hr-setup").hidden=w!=="in";$("hr-replay").hidden=w!=="rv";if(w==="in"){$("hr-table").hidden=false;S.active=null;drawSetup()}else{showView("story");drawStep();drawStory()}}
+    $("hr-reset").addEventListener("click",function(){S={pl:[],card:{},active:null,acts:[],phase:"hero"};MY.openId=null;MY.note="";hint("");showTab("in")});
+    function showTab(w){["in","rv","my"].forEach(function(k){$("hr-tab-"+k).setAttribute("aria-selected",w===k)});$("hr-setup").hidden=w!=="in";$("hr-replay").hidden=w!=="rv";$("hr-my").hidden=w!=="my";
+      if(w==="in"){$("hr-table").hidden=false;S.active=null;drawSetup()}else if(w==="rv"){showView("story");drawStep();drawStory();drawSaveBar()}else{$("hr-table").hidden=true;drawMy();refreshMy()}}
     function showView(v){$("hr-v-story").setAttribute("aria-selected",v==="story");$("hr-v-step").setAttribute("aria-selected",v==="step");$("hr-story").hidden=v!=="story";$("hr-stepview").hidden=v!=="step";$("hr-table").hidden=v==="story";$("hr-sumbox").hidden=v==="story"}
     $("hr-v-story").addEventListener("click",function(){showView("story")});
     $("hr-v-step").addEventListener("click",function(){showView("step");drawStep()});
@@ -553,6 +554,7 @@
     $("hr-dots").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;cur=+b.dataset.k;drawStep()});
     $("hand-review").addEventListener("keydown",function(e){if($("hr-replay").hidden||e.target.tagName==="INPUT")return;if(e.key==="ArrowRight")$("hr-next").click();else if(e.key==="ArrowLeft")$("hr-prev").click()});
     $("hr-ex").addEventListener("click",function(){
+      MY.openId=null;MY.note="";
       $("hr-left").value=300;$("hr-paid").value=135;$("hr-ft").checked=false;$("hr-ante").value=1;
       S={pl:[{id:"h",seat:"BTN",stack:40},{id:"v1",seat:"CO",stack:35},{id:"v2",seat:"BB",stack:50}],card:{h1:45,h2:41,v21:39,v22:35,f1:42,f2:31,f3:8,t:1,r:26},active:null,phase:"play",
         acts:[{id:"v1",t:"raise",to:2.2},{id:"h",t:"call"},{id:"v2",t:"call"},
@@ -560,5 +562,94 @@
               {id:"v2",t:"check"},{id:"h",t:"raise",to:8},{id:"v2",t:"call"},
               {id:"v2",t:"raise",to:14},{id:"h",t:"call"}]};
       var r=build();if(r){showTab("in");hint(r,true);return}showTab("rv")});
+    // ---------- 내 복기: 내 계정에 저장 (ALLIN IQ 앱 안에서 열었을 때) ----------
+    // 저장하는 것은 입력한 내용(자리·카드·스택·액션·대회 정보)과 이름·메모뿐이고, 열 때 해설을 다시 계산해요
+    var MY={list:null,openId:null,openSig:"",loading:false,err:"",busy:false,mode:"new",delArm:false,note:""};
+    function store(){try{return window.parent!==window&&window.parent.HR_STORE?window.parent.HR_STORE:null}catch(e){return null}}
+    function canSave(){var st=store();try{return !!(st&&st.who().ok)}catch(e){return false}}
+    function esc(t){return String(t==null?"":t).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+    function snap(){return {pl:S.pl.map(function(p){return {id:p.id,seat:p.seat,stack:+p.stack||0}}),card:JSON.parse(JSON.stringify(S.card)),
+      acts:S.acts.map(function(a){var o={id:a.id,t:a.t};if(a.t==="raise")o.to=+a.to;return o}),
+      ante:+$("hr-ante").value||0,left:+$("hr-left").value||0,paid:+$("hr-paid").value||0,ft:!!$("hr-ft").checked,skip:!!S.skipBoard}}
+    function sigOf(d){return JSON.stringify([d.pl,Object.keys(d.card).sort().map(function(k){return [k,d.card[k]]}),d.acts,d.ante,d.left,d.paid,d.ft,d.skip])}
+    function loadSnap(d){$("hr-ante").value=d.ante;$("hr-left").value=d.left;$("hr-paid").value=d.paid;$("hr-ft").checked=!!d.ft;
+      S={pl:(d.pl||[]).map(function(p){return {id:p.id,seat:p.seat,stack:+p.stack}}),card:Object.assign({},d.card||{}),acts:(d.acts||[]).map(function(a){return Object.assign({},a)}),active:null,phase:"play",skipBoard:!!d.skip}}
+    function heroCnt(){var c={good:0,mix:0,bad:0};TL.forEach(function(e){e.ev.forEach(function(it){if(it.id==="h"&&c[it.vd]!==undefined)c[it.vd]++})});return c}
+    function zoneShort(){var z=icmZone(+$("hr-left").value,+$("hr-paid").value,$("hr-ft").checked).name;return /^파이널/.test(z)?"파이널":/^버블/.test(z)?"버블":/^입상권/.test(z)?"입상권":/^머니/.test(z)?"머니 근처":""}
+    function heroLast(){var G=newGame(),lab="";S.acts.forEach(function(a){var p=G.pl[a.id];if(a.id==="h")lab=actLabel(G,a,p).replace(/ [0-9.]+BB$/,"");apply(G,a)});return lab}
+    function autoTitle(){var d=new Date(),h=P("h"),c=cardsOf("h"),z=zoneShort(),lab=heroLast();
+      return ((d.getMonth()+1)+"/"+d.getDate()+" "+(z?z+" ":"")+h.seat+" "+cls(c[0],c[1])+" vs "+villains().map(function(v){return v.seat}).join("·")+(lab?" "+lab:"")).slice(0,40)}
+    function recNow(id,t,m){var h=P("h"),c=cardsOf("h");
+      return {id:id||(Date.now().toString(36)+Math.random().toString(36).slice(2,6)),t:String(t||"").trim().slice(0,40)||autoTitle(),m:String(m||"").trim().slice(0,300),at:Date.now(),
+        d:snap(),s:{hs:h.seat,hc:c,vs:villains().map(function(v){return v.seat}).join("·"),st:+h.stack,z:zoneShort(),c:heroCnt(),res:String(TL.length?TL[TL.length-1].label:"").slice(0,80)}}}
+    function openRec(){if(!MY.openId||!MY.list)return null;return MY.list.filter(function(r){return r.id===MY.openId})[0]||null}
+    function dayTxt(t){var d=new Date(t),n=new Date();return d.toDateString()===n.toDateString()?"오늘":(d.getMonth()+1)+"/"+d.getDate()}
+    function cardChip(c){return '<span class="'+(isRed(c)?"red":"")+'">'+RS[c>>2]+'<br>'+SYM[c&3]+'</span>'}
+    function setCount(){$("hr-mycnt").textContent=MY.list&&MY.list.length?String(MY.list.length):""}
+    function drawSaveBar(){var el=$("hr-savebar");if(!TL.length){el.innerHTML="";return}
+      var r=openRec(),h="";
+      if(MY.note)h+='<div class="cap" role="status">'+esc(MY.note)+'</div>';
+      if(r){var changed=sigOf(snap())!==MY.openSig;
+        h+='<div class="hr-saved"><b>저장됨</b> · '+esc(r.t)+(r.m?'<p>'+esc(r.m)+'</p>':'')+'</div>';
+        h+=changed?'<div class="row"><button type="button" class="hr-go" data-sv="upd">바뀐 내용 저장</button><button type="button" class="hr-sub" data-sv="new">새로 저장</button></div>':
+          '<div class="row"><button type="button" class="hr-sub" data-sv="upd">이름·메모 고치기</button><button type="button" class="hr-sub" data-sv="edit">입력 화면에서 고치기</button><button type="button" class="hr-sub" data-sv="del">'+(MY.delArm?"한 번 더 누르면 삭제돼요":"삭제")+'</button></div>'}
+      else h+='<button type="button" class="big" data-sv="new">이 복기 저장</button><div class="cap">저장하면 ‘내 복기’에서 언제든 다시 볼 수 있어요</div>';
+      el.innerHTML=h}
+    function drawMy(){var st=store(),el=$("hr-mylist"),meta=$("hr-mymeta");meta.textContent="";
+      if(!st){el.innerHTML='<div class="hr-myempty">ALLIN IQ 앱 안에서 열면 내 계정에 저장한 복기를 볼 수 있어요.<br><a class="hr-go" href="../" target="_top" style="display:inline-block;text-decoration:none">ALLIN IQ 열기</a></div>';return}
+      if(!canSave()){el.innerHTML='<div class="hr-myempty">가입한 플레이어만 복기를 저장할 수 있어요.<br><button type="button" class="hr-go" data-my="join">가입·로그인하기</button></div>';return}
+      if(MY.err){el.innerHTML='<div class="hr-myempty">'+esc(MY.err)+'<br><button type="button" class="hr-sub" data-my="retry">다시 불러오기</button></div>';return}
+      if(!MY.list){el.innerHTML='<div class="hr-myempty">불러오는 중…</div>';return}
+      meta.textContent=MY.list.length+" / "+(st.max||50)+"개 · 최근 저장 순";
+      if(!MY.list.length){el.innerHTML='<div class="hr-myempty">아직 저장한 복기가 없어요. 핸드를 넣고 결과 화면 아래 ‘이 복기 저장’을 누르세요.</div>';return}
+      el.innerHTML=MY.list.map(function(r){var s=r.s||{},c=s.c||{},vd=[];
+        if(c.good)vd.push('<span class="g">좋음 '+c.good+'</span>');if(c.mix)vd.push('<span>경계 '+c.mix+'</span>');if(c.bad)vd.push('<span class="b">개선 '+c.bad+'</span>');
+        return '<button type="button" class="hr-myitem" data-open="'+esc(r.id)+'"><span class="cs">'+((s.hc||[]).length===2?s.hc.map(cardChip).join(""):"")+'</span><span class="tx"><b>'+esc(r.t)+'</b><small>'+esc(s.hs||"")+' vs '+esc(s.vs||"")+' · '+(+s.st||0)+'BB'+(s.z?' · '+esc(s.z):'')+' · '+dayTxt(r.at)+'</small><span class="vd">'+(vd.join("")||'<span>평가 없음</span>')+'</span></span><i aria-hidden="true">›</i></button>'}).join("")}
+    function refreshMy(){var st=store();if(!st||!canSave()||MY.loading)return;MY.loading=true;MY.err="";
+      st.get().then(function(l){MY.list=l},function(){MY.err="불러오지 못했어요. 잠시 후 다시 시도해 주세요."}).then(function(){MY.loading=false;setCount();if(!$("hr-my").hidden)drawMy();if(!$("hr-replay").hidden)drawSaveBar()})}
+    function stashDraft(){try{sessionStorage.setItem("hr-draft",JSON.stringify(snap()))}catch(e){}}
+    function sheetMsg(t){$("hr-sheetmsg").textContent=t||""}
+    function openSheet(mode){var st=store();MY.mode=mode;MY.delArm=false;sheetMsg("");
+      var h=P("h"),c=cardsOf("h"),r=mode==="upd"?openRec():null;
+      $("hr-sheetttl").textContent=mode==="upd"?"저장한 복기 고치기":"복기 저장";
+      $("hr-sheetsum").innerHTML='<span class="hr-myitem" style="padding:0;border:0;background:none;cursor:default;width:auto"><span class="cs">'+(c?c.map(cardChip).join(""):"")+'</span></span><span><b>'+esc(h.seat)+' 히어로 vs '+esc(villains().map(function(v){return v.seat+" "+nameOf(v.id)}).join(", "))+'</b>'+(+h.stack)+'BB'+(zoneShort()?' · '+zoneShort():'')+'</span>';
+      $("hr-name").value=r?r.t:autoTitle();$("hr-memo").value=r?(r.m||""):"";
+      var go=$("hr-dosave");go.disabled=false;
+      if(!st){sheetMsg("ALLIN IQ 앱 안에서 열어야 저장할 수 있어요.");go.textContent="ALLIN IQ 열기";go.dataset.act="app"}
+      else if(!canSave()){sheetMsg("가입한 플레이어만 저장할 수 있어요. 가입이나 로그인을 마치면 이 복기로 다시 돌아와요.");go.textContent="가입·로그인하고 저장";go.dataset.act="join"}
+      else{go.textContent="저장";go.dataset.act="save"}
+      $("hr-sheet").hidden=false;setTimeout(function(){try{$("hr-name").focus()}catch(e){}},30)}
+    function closeSheet(){$("hr-sheet").hidden=true}
+    function doSave(){var st=store(),go=$("hr-dosave");if(MY.busy)return;
+      if(go.dataset.act==="app"){window.top.location.href="../";return}
+      if(go.dataset.act==="join"){stashDraft();closeSheet();try{st.join()}catch(e){}return}
+      MY.busy=true;go.disabled=true;sheetMsg("");go.textContent="저장 중…";
+      var mode=MY.mode,keep=mode==="upd"?MY.openId:null,rec=recNow(keep,$("hr-name").value,$("hr-memo").value);
+      st.get().then(function(l){
+        if(keep){var i=-1;l.forEach(function(x,k){if(x.id===keep)i=k});if(i<0){keep=null;rec.id=recNow().id}else{l.splice(i,1);l.unshift(rec)}}
+        if(!keep){if(l.length>=(st.max||50))throw {full:true};l.unshift(rec)}
+        return st.set(l).then(function(){return l})}).then(function(l){
+          MY.list=l;MY.openId=rec.id;MY.openSig=sigOf(rec.d);MY.note=mode==="upd"?"고친 내용을 저장했어요.":"저장했어요. ‘내 복기’에서 언제든 다시 볼 수 있어요.";MY.busy=false;setCount();closeSheet();drawSaveBar()},
+        function(e){MY.busy=false;go.disabled=false;go.textContent="저장";sheetMsg(e&&e.full?"50개까지 저장돼요. ‘내 복기’에서 하나를 지운 뒤 저장하세요.":"저장하지 못했어요. 잠시 후 다시 시도해 주세요.")})}
+    function delOpen(){var st=store(),id=MY.openId;if(!st||!id||MY.busy)return;MY.busy=true;
+      st.get().then(function(l){l=l.filter(function(x){return x.id!==id});return st.set(l).then(function(){return l})}).then(function(l){MY.list=l;MY.openId=null;MY.busy=false;MY.delArm=false;setCount();showTab("my")},
+        function(){MY.busy=false;MY.delArm=false;MY.note="삭제하지 못했어요. 잠시 후 다시 시도해 주세요.";drawSaveBar()})}
+    $("hr-tab-my").addEventListener("click",function(){showTab("my")});
+    $("hr-savebar").addEventListener("click",function(e){var b=e.target.closest("[data-sv]");if(!b)return;var k=b.dataset.sv;
+      if(k==="new"||k==="upd"){MY.note="";openSheet(k)}
+      else if(k==="edit"){MY.note="";showTab("in")}
+      else if(k==="del"){if(!MY.delArm){MY.delArm=true;drawSaveBar();return}delOpen()}});
+    $("hr-mylist").addEventListener("click",function(e){var j=e.target.closest("[data-my]");
+      if(j){if(j.dataset.my==="join"){try{store().join()}catch(x){}}else{MY.err="";drawMy();refreshMy()}return}
+      var b=e.target.closest("[data-open]");if(!b||!MY.list)return;var r=MY.list.filter(function(x){return x.id===b.dataset.open})[0];if(!r)return;
+      loadSnap(r.d);MY.openId=r.id;MY.openSig=sigOf(snap());MY.note="";MY.delArm=false;
+      var er=build();if(er){showTab("in");hint(er,true);return}showTab("rv");try{$("hand-review").scrollIntoView({block:"start"})}catch(x){}});
+    $("hr-sheet").addEventListener("click",function(e){if(e.target.closest("[data-close]"))closeSheet()});
+    $("hr-dosave").addEventListener("click",doSave);
+    document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!$("hr-sheet").hidden)closeSheet()});
     drawSetup();
+    refreshMy();
+    // 가입·로그인하러 가기 전에 보던 복기: 돌아오면 다시 열어 줘요
+    (function(){var d=null;try{d=JSON.parse(sessionStorage.getItem("hr-draft")||"null");sessionStorage.removeItem("hr-draft")}catch(e){}
+      if(!d||!d.pl)return;loadSnap(d);if(build())return;MY.note=canSave()?"가입 전에 보던 복기를 불러왔어요. 아래 ‘이 복기 저장’을 누르세요.":"";showTab("rv")})();
   })();

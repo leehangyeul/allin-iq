@@ -29,6 +29,7 @@
         <div class="hr-tabs" role="tablist">
           <button type="button" role="tab" id="hr-tab-in" aria-selected="true">① 핸드 입력</button>
           <button type="button" role="tab" id="hr-tab-rv" aria-selected="false">② 복기 보기</button>
+          <button type="button" role="tab" id="hr-tab-my" aria-selected="false">내 복기 <b id="hr-mycnt"></b></button>
           <button type="button" class="hr-sub" id="hr-ex" style="margin-left:auto">예시 핸드로 보기</button>
         </div>
         <div class="hr-table" id="hr-table" aria-label="포커 테이블"></div>
@@ -73,8 +74,27 @@
           <div class="hr-evals" id="hr-evals" aria-live="polite"></div>
           </div>
           <div class="hr-sumbox" id="hr-sumbox"></div>
+          <div class="hr-savebar" id="hr-savebar"></div>
+        </div>
+
+        <div id="hr-my" hidden>
+          <div class="hr-myhd"><b>내 복기</b><span id="hr-mymeta"></span></div>
+          <div id="hr-mylist" class="hr-mylist"></div>
         </div>
       </div>
+  <div class="hr-sheet" id="hr-sheet" hidden>
+    <div class="hr-sheetbg" data-close="1"></div>
+    <div class="hr-sheetbox" role="dialog" aria-modal="true" aria-labelledby="hr-sheetttl">
+      <b id="hr-sheetttl">복기 저장</b>
+      <div class="hr-sheetsum" id="hr-sheetsum"></div>
+      <label for="hr-name">이름<input id="hr-name" type="text" maxlength="40" autocomplete="off"></label>
+      <small class="hr-cap">자동으로 채워져요. 바꿔도 돼요.</small>
+      <label for="hr-memo">메모 (선택)<textarea id="hr-memo" maxlength="300" rows="3" placeholder="예: 상대는 BB에서 자주 3벳하는 사람"></textarea></label>
+      <div class="hr-sheetmsg" id="hr-sheetmsg" role="alert"></div>
+      <div class="hr-sheetbtns"><button type="button" class="hr-sub" data-close="1">취소</button><button type="button" class="hr-go" id="hr-dosave">저장</button></div>
+      <small class="hr-cap" style="text-align:center">내 계정에 저장돼요 · 최대 50개 · 폰·PC에서 같이 보여요</small>
+    </div>
+  </div>
   <footer>스택과 금액은 모두 BB 단위 (SB 0.5BB · BB 1BB · BB 앤티).</footer>
 </div>
 <script>

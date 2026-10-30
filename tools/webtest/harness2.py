@@ -35,6 +35,7 @@ def can_read(path,u):
     if col=='secret':return is_admin(u)
     if col=='members':return u['uid']==id or is_admin(u)
     if col=='coach':return u['uid']==id or is_admin(u) or claims_old(u,id)
+    if col=='hreview':return u['uid']==id or is_admin(u) or claims_old(u,id)
     return col in ('meta','scores','names')
 def can_write(path,d,u,delete=False):
     if not u:return False
@@ -55,6 +56,10 @@ def can_write(path,d,u,delete=False):
         if delete:return is_admin(u) or claims_old(u,id)
         try:ok=set(d)<={'season','hn','dn','h','d','at'} and all(num(d.get(k)) for k in ['season','hn','dn']) and isinstance(d.get('at'),(int,float)) and isinstance(d.get('h'),list) and isinstance(d.get('d'),list) and len(d['h'])<=1200 and len(d['d'])<=400
         except Exception:ok=False
+        return is_admin(u) or (is_player(u) and u['uid']==id and is_member(id) and not blocked(id) and ok)
+    if col=='hreview':
+        if delete:return is_admin(u) or claims_old(u,id)
+        ok=set(d)<={'r','at'} and isinstance(d.get('at'),(int,float)) and isinstance(d.get('r'),list) and len(d['r'])<=50
         return is_admin(u) or (is_player(u) and u['uid']==id and is_member(id) and not blocked(id) and ok)
     if col=='scores':
         if delete:

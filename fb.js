@@ -148,6 +148,10 @@ try {
             const oc = await getDoc(ref("coach/" + nd.uid));
             if (oc.exists()) { await setDoc(ref("coach/" + uid), { ...oc.data(), at: Date.now() }); await deleteDoc(ref("coach/" + nd.uid)); }
           } catch (e) { console.warn("[ALLIN IQ] coach move:", e); }
+          try {
+            const oh = await getDoc(ref("hreview/" + nd.uid));
+            if (oh.exists()) { await setDoc(ref("hreview/" + uid), { ...oh.data(), at: Date.now() }); await deleteDoc(ref("hreview/" + nd.uid)); }
+          } catch (e) { console.warn("[ALLIN IQ] review move:", e); }
           return { ok: true, name: nd.name, uid, switched: true };
         } catch (e) { return { err: authErr(e) }; }
       },
