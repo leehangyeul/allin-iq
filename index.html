@@ -756,12 +756,12 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
   <div class="prog" id="prog"></div>
   <div id="stage"></div>
   <section class="panel" id="panel"></section>
-  <p class="disc">GTO 빈도는 앱 구조를 보여주기 위한 예시 수치예요. 실제 버전은 솔버 결과로 교체합니다.</p>
+  <p class="disc">오픈 연습과 짧은 스택 올인·콜 문제는 직접 계산한 근사값이고, 그 밖의 핸드 퀴즈 빈도는 GTO 감각을 익히기 위한 예시 수치예요.</p>
 </div>
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611010256";
+window.HGQ_WEB=true;window.APP_VERSION="202611012042";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1390,8 +1390,11 @@ function dSpot(){
   if(Math.random()<0.5){const p=dPick(DPOS.slice(0,8));return{kind:"pf",st,pos:p,spot:"rfi"}}
   const k=dPick(Object.keys(P.call));const [op,pos]=k.split(">");return{kind:"pf",st,pos,op,spot:"vs_shove"}
 }
-const pfF=sp=>sp.spot==="rfi"?DRILL_PF[sp.st].jam[sp.pos]:DRILL_PF[sp.st].call[sp.op+">"+sp.pos];
-const pfE=sp=>sp.spot==="rfi"?DRILL_PF[sp.st].jam_ev[sp.pos]:DRILL_PF[sp.st].call_ev[sp.op+">"+sp.pos];
+// 헤즈업 푸시/폴드(앤티 없음, HU_EV): 올인/콜 EV가 폴드보다 크면 그 행동
+const huE=sp=>{const r=(HU_EV[String(sp.st)]||{})[sp.spot==="rfi"?"sb":"bb"]||{};return DH.map(c=>+r[c]||0)};
+const pfF=sp=>sp.kind==="hu"?huE(sp).map(x=>x>0?1:0):sp.spot==="rfi"?DRILL_PF[sp.st].jam[sp.pos]:DRILL_PF[sp.st].call[sp.op+">"+sp.pos];
+const pfE=sp=>sp.kind==="hu"?huE(sp):sp.spot==="rfi"?DRILL_PF[sp.st].jam_ev[sp.pos]:DRILL_PF[sp.st].call_ev[sp.op+">"+sp.pos];
+const isHU=h=>HEV.indexOf(h.me+"|"+h.hand.join(""))>=0&&!!HU_EV[String(h.d||100)];
 // what each hand class does in this spot: letter for charts, frequency of the aggressive action for 10BB
 function dGrid(sp){
   if(sp.kind==="chart")return sp.g.split("");
@@ -1467,7 +1470,7 @@ function dSituation(sp){
   if(sp.spot==="vs_open")return"BTN 오픈 → SB 폴드 → 히어로 BB 차례";
   return `${sp.op} 올인 ${sp.st}BB → 사이 자리 모두 폴드 → 히어로 차례`;
 }
-function dSource(sp){return sp.kind==="chart"?`프리플랍 차트 · ${sp.st}BB`:`${sp.st}BB 직접 계산 근사 · 9인 BB 앤티 · 첫 콜러 모델 · cEV`}
+function dSource(sp){return sp.kind==="chart"?`프리플랍 차트 · ${sp.st}BB`:sp.kind==="hu"?`${sp.st}BB 헤즈업 직접 계산 근사 · 앤티 없음 · cEV`:`${sp.st}BB 직접 계산 근사 · 9인 BB 앤티 · 첫 콜러 모델 · cEV`}
 function dLog(sp){return `<div class="steps2">${dSituation(sp).split(" → ").map(t=>{const v=sp.spot!=="rfi"&&t.startsWith(sp.op||"BTN");const h=t.startsWith("히어로");
   return `<div class="ar"><span class="who ${v?"v":h?"h":"n"}">${v?"빌런":h?"히어로":"상황"}</span><span class="at2">${hl(t.replace(/^히어로\s*/,""))}</span></div>`}).join("")}</div>`}
 function drillRender(){
@@ -1487,7 +1490,7 @@ function drillRender(){
 }
 function dMiniGrid(sp,hi){
   const g=dGrid(sp);let freq=null;
-  if(sp.kind==="pf")freq=pfF(sp);
+  if(sp.kind!=="chart")freq=pfF(sp);
   const cells=DH.map((h,i)=>{const bg=freq?`linear-gradient(90deg,${DCOL[sp.spot==="rfi"?"j":"c"]} ${Math.round(freq[i]*100)}%,${DCOL.f} ${Math.round(freq[i]*100)}%)`:DCOL[g[i]];
     return `<div class="rgc ${i===hi?"me":""} ${g[i]==="f"&&!freq?"fo":""}" style="background:${bg}" title="${h}">${h}</div>`}).join("");
   const tot={};DH.forEach((h,i)=>{tot[g[i]]=(tot[g[i]]||0)+dComb(h)});
@@ -2038,6 +2041,7 @@ function best7like(cs){if(cs.length===5)return rank5(cs);let b=null;const n=cs.l
 const QPOS=p=>p==="MP"?"UTG+2":p;
 function chartRef(h){
   const D=h.d||100,me=QPOS(h.me),pf=h.pf;const unopened=pf[1]<=1;
+  if(isHU(h))return{sp:h.me==="SB"?{kind:"hu",st:D,pos:"SB",spot:"rfi"}:{kind:"hu",st:D,pos:"BB",op:"SB",spot:"vs_shove"},exact:true,from:D};
   const stacks=[15,25,40,75];
   const near=stacks.reduce((a,b)=>Math.abs(b-D)<Math.abs(a-D)?b:a,stacks[0]);
   if(unopened&&me!=="BB"){
@@ -2054,7 +2058,9 @@ function chartBlock(h){
   if(!ref)return `<div class="dx"><b>프리플랍 차트</b><p>이 프리플랍 상황(${h.multi?"멀티웨이 ":""}${h.vs} 액션 뒤 ${h.me})에 맞는 차트는 없어요. 자료에 있는 건 첫 진입, SB 첫 진입, 40BB BB vs BTN 오픈 대응, 8~20BB 올인·콜 계산뿐이에요.</p></div>`;
   const sp=ref.sp;let verdict;
   if(sp.kind==="chart")verdict=`차트에서 ${cls} 핸드는 <b>${dActLabel(sp,sp.g[idx])}</b>`;
-  else{const f=pfF(sp)[idx];verdict=`${sp.st}BB 계산 근사에서 ${cls} 핸드는 <b>${sp.spot==="rfi"?"올인":"콜"} ${(f*100).toFixed(1)}%</b>`}
+  else{const f=pfF(sp)[idx],ev=pfE(sp)[idx],go=sp.spot==="rfi"?"올인":"콜";verdict=`${sp.st}BB ${sp.kind==="hu"?"헤즈업 ":""}계산 근사에서 ${cls} 핸드는 <b>${sp.kind==="hu"&&Math.abs(ev)<0.05?go+"과 폴드가 거의 같음":go+" "+Math.round(f*100)+"%"}</b> (${go} EV ${ev>=0?"+":""}${ev.toFixed(2)}BB, 폴드 0BB)`;
+    if(Math.abs(ev)<0.3)verdict+=`. ${go}과 폴드의 EV 차이가 ${Math.abs(ev).toFixed(2)}BB로 거의 같아서, 계산 방법에 따라 섞는 비율이 크게 달라질 수 있는 경계 핸드예요`;
+    if((h.s[0].o||[]).some(x=>x[0]==="raise"||/^b\d+$/.test(x[0])))verdict+=`. 이 계산은 올인과 폴드만 비교해서, 작은 레이즈 선택지는 들어 있지 않아요`}
   const note=ref.exact?"":`<p class="warn2">이 핸드는 ${h.d||100}BB라 정확히 맞는 차트가 없어요. 가장 가까운 ${ref.from}BB ${sp.kind==="chart"?"프리플랍 차트":"계산 근사"}를 참고용으로만 보여줘요. 스택이 다르면 정답도 달라질 수 있어요.</p>`;
   return `<div class="dx"><b>프리플랍 차트 · ${sp.st}BB ${sp.pos}${sp.spot==="vs_open"?" vs BTN 오픈":sp.spot==="vs_shove"?" vs "+sp.op+" 올인":" 첫 진입"}</b>${note}<p>${verdict}. ${dExplain(sp,idx)}</p>${dMiniGrid(sp,idx)}<p class="note">${dSource(sp)}</p></div>`;
 }
@@ -2403,8 +2409,8 @@ function rgEdge(g,i){const r=Math.floor(i/13),c=i%13,nb=[[r-1,c],[r+1,c],[r,c-1]
   const edge=nb.some(x=>(x==="f")!==(g[i]==="f"));return g[i]==="f"?(edge?"레인지 바로 바깥의 경계 핸드":"레인지에서 멀리 떨어진 핸드"):(edge?"레인지 가장자리 핸드":"레인지 안쪽의 확실한 핸드")}
 function rgPre(h,decs){
   const D=h.d||100,S=rgBucket(D),d=decs[0];
-  if(h.cv&&d){const ref=chartRef(h);if(ref){const sp=ref.sp,i=clsIdx(h.hand),f=pfF(sp)[i],ev=pfE(sp)[i],go=sp.spot==="rfi"?"올인":"콜";
-    return{sum:[["계산",`<b>${DH[i]} → ${go} ${Math.round(f*100)}%</b><em>${sp.st}BB 계산 근사 · ${go} EV ${ev>=0?"+":""}${ev.toFixed(2)}BB · 히어로 선택 ${lab(d.o,d.k)}</em>`]],html:chartBlock(h)}}}
+  if((h.cv||isHU(h))&&d){const ref=chartRef(h);if(ref){const sp=ref.sp,i=clsIdx(h.hand),f=pfF(sp)[i],ev=pfE(sp)[i],go=sp.spot==="rfi"?"올인":"콜";
+    return{sum:[["계산",`<b>${DH[i]} → ${sp.kind==="hu"&&Math.abs(ev)<0.05?go+"·폴드 거의 같음":go+" "+Math.round(f*100)+"%"}</b><em>${sp.st}BB ${sp.kind==="hu"?"헤즈업 ":""}계산 근사 · ${go} EV ${ev>=0?"+":""}${ev.toFixed(2)}BB · 히어로 선택 ${lab(d.o,d.k)}</em>`]],html:chartBlock(h)}}}
   if(!S||!d)return{sum:[],html:chartBlock(h)};const sum=[];
   const me=QPOS(h.me),v1=QPOS(h.vs),v2=h.vs2?QPOS(h.vs2):null,M=h.me,A1=h.vs,A2=h.vs2,a=h.s[0].a,idx=clsIdx(h.hand),cls=DH[idx];
   const unopened=h.pf[1]<=1,vs3=/히어로 [\d.]+BB 오픈 → 빌런 3벳/.test(a),v4=/빌런 4벳/.test(a),jam=/빌런 [\d.]+BB 올인/.test(a);
@@ -3155,7 +3161,7 @@ noteFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611010256"></script>
+<script src="webgate.js?v=202611012042"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
