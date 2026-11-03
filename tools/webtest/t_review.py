@@ -13,7 +13,7 @@ async def main():
             await pg.evaluate("()=>{MENUTAB='home';menu()}");await asyncio.sleep(.1)
             r=await pg.evaluate("()=>({card:!!document.getElementById('goRv'),nav:document.querySelectorAll('#panel .mnav button').length,ov:document.documentElement.scrollWidth-document.documentElement.clientWidth})")
             if not r['card']:bad.append(f'{w}px: 홈에 복기 카드 없음')
-            if r['nav']!=4:bad.append(f'{w}px: 하단 메뉴 {r["nav"]}칸')
+            if r['nav']!=5:bad.append(f'{w}px: 하단 메뉴 {r["nav"]}칸')
             if r['ov']>0:bad.append(f'{w}px: 홈 가로 넘침')
             await pg.evaluate("()=>document.getElementById('goRv').click()");await asyncio.sleep(1.5)
             fr=None
