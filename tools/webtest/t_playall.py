@@ -14,7 +14,7 @@ async def main():
         for hi in range(n):
             for path in range(4):
                 await pg.evaluate("(i)=>{start(0);order[hi]=LEVELS[0].hands[i];newHand()}",hi)
-                for _ in range(12):
+                for _ in range(25):
                     keys=await pg.evaluate("()=>[...document.querySelectorAll('#panel button[data-k]')].map(x=>x.dataset.k)")
                     if not keys:break
                     k=keys[path%len(keys)] if path<2 else random.choice(keys)

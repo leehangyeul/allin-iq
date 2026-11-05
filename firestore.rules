@@ -100,6 +100,17 @@ service cloud.firestore {
       let d = request.resource.data;
       return d.keys().hasOnly(['r', 'at']) && d.at is number && d.r is list && d.r.size() <= 50;
     }
+    // hmark: a player's marked hands (11/6), one document per account, up to 100
+    function validMark() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['m', 'at']) && d.at is number && d.m is list && d.m.size() <= 100;
+    }
+    match /hmark/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || claimsOld(uid));
+      allow create, update: if isAdmin()
+        || (isPlayer() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validMark());
+      allow delete: if isAdmin() || claimsOld(uid);
+    }
     match /hreview/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || claimsOld(uid));
       allow create, update: if isAdmin()

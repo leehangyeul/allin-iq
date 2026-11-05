@@ -152,6 +152,10 @@ try {
             const oh = await getDoc(ref("hreview/" + nd.uid));
             if (oh.exists()) { await setDoc(ref("hreview/" + uid), { ...oh.data(), at: Date.now() }); await deleteDoc(ref("hreview/" + nd.uid)); }
           } catch (e) { console.warn("[ALLIN IQ] review move:", e); }
+          try {
+            const om = await getDoc(ref("hmark/" + nd.uid));
+            if (om.exists()) { await setDoc(ref("hmark/" + uid), { ...om.data(), at: Date.now() }); await deleteDoc(ref("hmark/" + nd.uid)); }
+          } catch (e) { console.warn("[ALLIN IQ] mark move:", e); }
           return { ok: true, name: nd.name, uid, switched: true };
         } catch (e) { return { err: authErr(e) }; }
       },
