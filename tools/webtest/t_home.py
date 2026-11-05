@@ -20,6 +20,12 @@ async def main():
                     if r['nav']!=5 or r['on']!=tab:bad.append(f'{w}px {tab}: 하단 메뉴 이상 {r}')
         await pg.set_viewport_size({'width':390,'height':844})
         await pg.evaluate("()=>{STATS={n:3,sum:240,streak:0,best:0};MENUTAB='home';menu()}")
+        # 머리글 AIQ 로고(11/5): 로고 그림 + ALLIN IQ 글자, 320폭에서도 머리글이 한 줄
+        lg=await pg.evaluate("()=>{const s=document.querySelector('#top .wm svg.aiq'),t=document.querySelector('#top .wmt');return{svg:!!s,w:s?s.getBoundingClientRect().width:0,txt:t?t.innerText:''}}")
+        if not lg['svg'] or lg['w']<40:bad.append(f'머리글 AIQ 로고 없음 {lg}')
+        if 'ALLIN' not in lg['txt']:bad.append('머리글 ALLIN IQ 글자 없음')
+        import json as _j;mf=_j.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','manifest.webmanifest'),encoding='utf-8'))
+        if not all('v=aiq' in i['src'] for i in mf['icons']):bad.append('앱 아이콘 주소가 새 아이콘이 아님')
         # 하단 메뉴로 이동
         for mt,exp in [('rank','lbbox'),('chart','ctab'),('more','adGo'),('home','go')]:
             await pg.evaluate("(m)=>document.querySelector('.mnav [data-mt=\"'+m+'\"]').click()",mt);await asyncio.sleep(.2)

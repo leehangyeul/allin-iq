@@ -29,8 +29,8 @@ rep('<title>홀덤 GTO 퀴즈</title>\n<meta name="claude:viewport-fit-sides" co
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ALLIN IQ">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">''')
+<link rel="icon" href="icons/icon-192.png?v=aiq">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=aiq">''')
 rep('</style>\n','</style>\n</head>\n<body>\n',1) if False else None
 i=s.index('</style>',s.index('<style>'));
 # the game has several style blocks? close head after the last style that precedes <div class="app">

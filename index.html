@@ -10,8 +10,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ALLIN IQ">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png?v=aiq">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=aiq">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
@@ -657,9 +657,11 @@ body{font-size:16px;min-height:100vh;min-height:100dvh;
 :root{--sans:"Pretendard","IBM Plex Sans KR",system-ui,sans-serif;--num:"Pretendard","IBM Plex Sans KR",sans-serif}
 body{letter-spacing:-.01em}
 .pot,.sth,.stv,.bet,.tile .ts b,.lbl .sc2 b,.movs b,.tgr,.tgn,.lbl .rk{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.wm{display:flex;flex-direction:column;gap:2px;line-height:1}
-.wm b{font-size:22px;font-weight:800;letter-spacing:.06em}.wm b i{font-style:normal;color:var(--gold)}
-.wm small{font-size:10px;letter-spacing:.32em;color:var(--muted);font-weight:600}
+.wm{display:flex;align-items:center;gap:12px;line-height:1;min-width:0}
+.wm .aiq{flex:none;display:block;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45))}
+.wmt{display:flex;flex-direction:column;gap:4px;min-width:0;padding-left:12px;border-left:1px solid rgba(212,175,124,.28)}
+.wm b{font-size:15px;font-weight:800;letter-spacing:.14em;white-space:nowrap}.wm b i{font-style:normal;color:var(--gold)}
+.wm small{font-size:9px;letter-spacing:.24em;color:var(--muted);font-weight:600;white-space:nowrap}
 
 :root{--room:#07090F;--sheet:#0C1019;--sheet2:#0A0D15;--line:#1A1F2B;--line2:#2A2F3B;--fg:#F8F9FB;--muted:#A39C8E;--dim:#6E6A62;
  --rail:#14161C;--rail2:#3A3326;--gold:#D4AF7C;--gold-soft:#231D13;--gold-ink:#EAD3AE;--hero:#D4AF7C;--hero-soft:#14120E;--hero-ink:#EAD3AE;
@@ -763,7 +765,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611040242";
+window.HGQ_WEB=true;window.APP_VERSION="202611051349";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2967,10 +2969,13 @@ function ctabRender(){
 function myRankText(){
   try{const r=lbRowsFor("all").ranked,i=LB.uid?r.findIndex(x=>x.id===LB.uid):-1;return i>=0?`${i+1}위`:"-"}catch(e){return"-"}
 }
+// ALLIN IQ 로고 (AIQ: 상아색 ΛIQ + 금색 Q 꼬리), 2026-11-05
+function aiqMark(w){const h=Math.round(w*440/940);
+  return `<svg class="aiq" width="${w}" height="${h}" viewBox="0 -30 940 440" role="img" aria-label="ALLIN IQ"><defs><linearGradient id="aiqIv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFDF8"></stop><stop offset="1" stop-color="#E6D9C2"></stop></linearGradient><linearGradient id="aiqGo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F6D287"></stop><stop offset="1" stop-color="#C68E3A"></stop></linearGradient><mask id="aiqMk" maskUnits="userSpaceOnUse" x="-20" y="-40" width="1000" height="480"><rect x="-20" y="-40" width="1000" height="480" fill="#fff"></rect><polygon points="680,200 797,200 958,406 812,406" fill="#000"></polygon></mask></defs><polygon points="10,358 233,5 413,330 413,358 350,358 233,147 92,358" fill="url(#aiqIv)"></polygon><rect x="422" y="5" width="68" height="353" fill="url(#aiqIv)"></rect><circle cx="713" cy="183" r="154" fill="none" stroke="url(#aiqIv)" stroke-width="72" mask="url(#aiqMk)"></circle><path d="M698 216 L773 216 Q785 216 792 225 L930 390 L838 390 Q828 390 822 383 Z" fill="url(#aiqGo)"></path></svg>`}
 function menu(){
   SCREEN="menu";
   const m=myCard();
-  $("top").innerHTML=`<div class="wm"><b>ALLIN <i>IQ</i></b><small>PLAY SMARTER · THINK DEEPER</small></div>`;
+  $("top").innerHTML=`<div class="wm">${aiqMark(60)}<span class="wmt"><b>ALLIN <i>IQ</i></b><small>PLAY SMARTER · THINK DEEPER</small></span></div>`;
   $("prog").innerHTML="";$("stage").innerHTML="";
   const nm=MYNAME?`${esc(MYNAME)} 님`:"게스트";
   if(MENUTAB==="rank"){
@@ -3216,7 +3221,7 @@ noteFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611040242"></script>
+<script src="webgate.js?v=202611051349"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy

@@ -190,7 +190,7 @@ button.hrc{cursor:pointer;font:inherit;font-family:var(--f-mono);font-weight:700
 .hr-more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--felt)}
 
 /* ALLIN IQ 머리말·버튼 */
-.wm{display:flex;flex-direction:column;line-height:1.1;margin-bottom:10px}.wm b{font-size:22px;font-weight:800;letter-spacing:.02em}.wm i{font-style:normal;color:#D4AF7C}.wm small{font-size:10px;letter-spacing:.18em;color:var(--muted)}
+.wm{display:flex;align-items:center;gap:12px;line-height:1.1;margin-bottom:10px}.wm .aiq{flex:none;display:block;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45))}.wmt{display:flex;flex-direction:column;gap:4px;padding-left:12px;border-left:1px solid rgba(212,175,124,.28)}.wm b{font-size:15px;font-weight:800;letter-spacing:.14em}.wm i{font-style:normal;color:#D4AF7C}.wm small{font-size:9px;letter-spacing:.2em;color:var(--muted)}
 .tool{border-color:rgba(212,175,124,.28);border-radius:18px}
 .hr-tabs button[aria-selected="true"]{color:#1A1306}
 .hr-what{margin:6px 0 4px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--sheet);font-size:13.5px;color:var(--muted)}
