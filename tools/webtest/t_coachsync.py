@@ -30,6 +30,8 @@ async def main():
         await adm.fill('#accin','abcd1');await adm.click('#accf button[type=submit]');await settle()
         pa=await mkpage(b,{'anon':'u_pa'});await open_join(pa,'new');await submit(pa,'abcd1','올인','1234')
         uid=await pa.evaluate("()=>LB.uid");chk('가입',bool(uid),uid)
+        # 가입 직후 열린 핸드 화면은 닫아 둬요(30초 타이머가 시험 도중 시간 초과 기록을 남기지 않게)
+        await pa.evaluate("()=>{qTimerStop();MENUTAB='home';menu()}")
         # A: 기존(번호 없는) 기록 60핸드/55연습 → 서버로
         await pa.evaluate(SEED,[60,1]);await pa.evaluate("()=>coachPull()");await asyncio.sleep(2.2);await settle()
         d=store.get('coach/'+uid);chk('서버에 저장',bool(d) and d['hn']==60 and d['dn']==60,(d or {}).get('hn'))

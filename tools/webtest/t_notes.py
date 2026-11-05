@@ -20,7 +20,7 @@ async def main():
         b=await p.chromium.launch();pg=await b.new_page()
         await pg.goto('http://127.0.0.1:8765/index.html');await asyncio.sleep(1.5)
         r=await pg.evaluate("""()=>{const out=[];LEVELS.forEach(L=>L.hands.forEach((h,hi)=>{const k=String(h.key||'');if(/콜보다 3벳 아니면 폴드|셋 마이닝보다 3벳 올인이 좋을/.test(k))out.push({hi,si:-1,me:h.me,hand:h.hand.join(''),top:'key',p:0,n:k})}));LEVELS.forEach(L=>L.hands.forEach((h,hi)=>(h.s||[]).forEach((s,si)=>{const f=s.f||{};const ks=Object.keys(f);const top=ks.reduce((a,b)=>(+f[b]||0)>(+f[a]||0)?b:a);
-          out.push({hi,si,me:h.me,hand:h.hand.join(''),top,p:+f[top]||0,n:String(s.n||'')})})));return {out,fixed:typeof noteFix==='function'?noteFix():-1,keys:typeof NOTEFIX==='object'?Object.keys(NOTEFIX).length:0}}""")
+          out.push({hi,si,me:h.me,hand:h.hand.join(''),top,p:+f[top]||0,n:String(s.n||'')})})));return {out,fixed:typeof noteFix==='function'?noteFix():-1,keys:typeof NOTEFIX==='object'?new Set(Object.keys(NOTEFIX).concat(typeof NOTEFIX_BOARD==='object'?Object.keys(NOTEFIX_BOARD):[])).size:0}}""")
         kk=await pg.evaluate("()=>LEVELS[0].hands.filter(h=>KEYFIX[h.me+'|'+h.hand.join('')]===h.key).length===Object.keys(KEYFIX).length")
         if not kk:bad.append('핸드 핵심 문장 고침이 적용되지 않음')
         if r['fixed']!=r['keys'] or r['keys']==0:bad.append(f"해설 고침 목록 {r['keys']}개 중 {r['fixed']}개만 적용")
