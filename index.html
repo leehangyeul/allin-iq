@@ -808,7 +808,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611060038";
+window.HGQ_WEB=true;window.APP_VERSION="202611072028";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -1248,7 +1248,8 @@ function start(i){SCREEN="hand";lv=i;results=[];deal();newHand();window.scrollTo
 function avgOf(){return STATS.n?Math.round(STATS.sum/STATS.n):0}
 
 function newHand(){
-  const h=order[hi];if(!PRACTICE)hMarkPlayed(h);const [hIn,vIn,dead,,v2In]=h.pf;const D=h.d||100;
+  {const o=order[hi].__src||order[hi];if(o.alt)order[hi]=Object.assign({},o,{__src:o,s:o.s.slice()})}
+  const h=order[hi];if(!PRACTICE)hMarkPlayed(h.__src||h);const [hIn,vIn,dead,,v2In]=h.pf;const D=h.d||100;
   const V=[{pos:h.vs,lbl:h.multi?"빌런1":"빌런",st:r1(D-vIn),inn:vIn,out:false}];
   if(h.multi)V.push({pos:h.vs2,lbl:"빌런2",st:r1(D-(v2In||0)),inn:v2In||0,out:false});
   G={D,hs:r1(D-hIn),hIn,dead,V,pot:r1(hIn+vIn+(v2In||0)+dead),dec:[],sub:null,ended:null,cx:false,agg:null,pend:null};G.fb=handBoard(h);
@@ -1331,7 +1332,10 @@ function choose(k){
   if(c.first&&k==="check"){const st=G.pend;G.pend=null;const r=runVillains(st.a);
     G.cur={o:st.o,f:st.f,n:st.n,h:st.h,a:r.text,label:ST[si]+" 체크 후",si,facing:r.facing,inMap:r.inMap,cr:null};return render()}
   // ③ 대본과 다른 선택(1순위가 아님)이면 남은 스트리트는 레인지 계산으로 진행
-  if(!G.cx&&(c.first||k!==bestOf(mo.o,mo.f))&&cxCan()){G.cx=true;G.agg=cxAggNow()}
+  const hh=order[hi];
+  if(si===0&&hh.alt&&k===hh.alt.k){hh.vh=hh.alt.vh;hh.s=[hh.s[0]].concat(hh.alt.s);G.alt=true}
+  if(!G.cx&&!G.alt&&(c.first||k!==bestOf(mo.o,mo.f))&&cxCan()){G.cx=true;G.agg=cxAggNow()}
+  if(!G.cx&&G.alt&&si>0&&(c.first||k!==bestOf(mo.o,mo.f))&&cxCan()){G.cx=true;G.agg=cxAggNow()}
   if(G.cx&&!c.pre){G.pend=null;return cxAfterHero(c,k)}
   if(c.pre){
     if(k==="call"){hpay(c.facing===0?1-G.hIn:c.facing)}
@@ -1352,6 +1356,48 @@ function choose(k){
   if(si===order[hi].s.length-1)return finish();
   si++;enterStreet();
 }
+// ===================== 3벳 라인 대본 (11/7, 동크 B안) =====================
+// 통합 차트로 프리플랍 1순위가 3벳이 됐는데 포스트플랍 대본은 콜 라인이라, 3벳하면 콜러가 먼저 베팅(동크)하던 5핸드.
+// 3벳 라인 대본을 새로 쓰고(예시 빈도), 원래 콜 라인 대본은 alt로 남겨 히어로가 콜을 고르면 그대로 이어져요. 보드는 같아요.
+const LINE3B={
+ "CO|Q♠Q♦|UTG+1":{vh:["A♠","J♠"],s:[
+  {a:"빌런 체크 (3벳에 콜)",o:[["check","체크"],["b33","베팅 33%"],["b66","베팅 66%"]],f:{check:65,b33:30,b66:5},h:"언더페어 · 마른 A 하이 보드 · SPR 약 2",
+   n:"3벳 팟이지만 A·J가 콜러 레인지(AQ·AJ·KQ·JJ·TT)를 많이 맞혀요. QQ는 베팅하면 이길 핸드만 콜하고 질 핸드는 접어서 베팅 가치가 낮아요. 체크로 팟을 지키고 쇼다운 가치를 챙겨요. 가끔 33%로 KQ·TT 같은 핸드를 접게 해요."},
+  {a:"빌런 50% 베팅",o:[["fold","폴드"],["call","콜"],["raise","레이즈"]],f:{fold:35,call:60,raise:5},h:"언더페어 · 스페이드 드로우가 생긴 A 하이 보드 · 필요 승률 약 25%",
+   n:"플랍이 체크로 넘어가면 콜러가 턴에 먼저 베팅(프로브)하는 건 자연스러워요. 빌런 레인지엔 Ax·Jx 밸류와 스페이드 드로우·약한 페어 블러프가 섞여 있어요. 필요 승률(약 25%)과 레인지 상대 승률이 비슷한 경계선이지만, SPR이 약 2라 QQ는 블러프 캐처로 콜이 기본이고 폴드도 섞어요."},
+  {a:"빌런 올인",o:[["fold","폴드"],["call","콜"]],f:{fold:0,call:100},h:"셋 · A 하이 보드",
+   n:"리버 Q로 셋이 됐어요. 지는 건 AA(셋)·KT(스트레이트)뿐이고 빌런의 투페어·탑페어에는 모두 이겨요. 콜이에요."}]},
+ "CO|J♠J♦|UTG+1":{vh:["A♥","Q♠"],s:[
+  {a:"빌런 체크 (3벳에 콜)",o:[["check","체크"],["b33","베팅 33%"],["b66","베팅 66%"]],f:{check:40,b33:55,b66:5},h:"언더페어 · 투톤 Q 하이 보드",
+   n:"3벳한 쪽이 레인지 우위(QQ·KK·AA·AK)가 있어 작은 c벳을 자주 써요. JJ는 Q 아래지만 TT·99·A 하이·클럽 드로우에 앞서 있어 33%로 얇은 밸류와 보호를 챙겨요. 체크도 섞어요."},
+  {a:"빌런 체크",o:[["check","체크"],["b33","베팅 33%"],["b75","베팅 75%"]],f:{check:75,b33:20,b75:5},h:"언더페어 · 클럽 세 장 Q 하이 보드",
+   n:"플러시가 완성되는 카드예요. 플랍 콜 레인지(Qx·클럽 드로우·페어)에 플러시가 생겨 JJ로 계속 베팅하면 더 강한 핸드만 남아요. 체크로 팟을 작게 가져가요."},
+  {a:"빌런 50% 베팅",o:[["fold","폴드"],["call","콜"],["raise","레이즈"]],f:{fold:55,call:45,raise:0},h:"보드 페어 투페어(사실상 JJ) · 필요 승률 약 25%",
+   n:"보드 Q가 페어가 되면서 Qx는 트립스예요. 턴이 체크로 넘어간 뒤 리버 베팅(프로브)엔 트립스·플러시 같은 밸류가 많고 블러프는 놓친 드로우 정도예요. 투페어라도 보드 페어라 사실상 JJ 한 페어예요. 블러프 캐처로 콜을 섞지만 폴드가 기본이에요."}]},
+ "LJ|A♣Q♣|MP":{vh:["9♥","9♠"],s:[
+  {a:"빌런 체크 (3벳에 콜)",o:[["check","체크"],["b33","베팅 33%"],["b66","베팅 66%"]],f:{check:35,b33:60,b66:5},h:"오버카드 두 장 · 투톤 J 하이 보드",
+   n:"3벳 팟 IP에선 레인지 전체로 작은 c벳을 자주 써요. AQ는 오버카드 두 장이라 맞으면 탑페어가 되고, 빌런의 66·77 같은 작은 페어를 접게 할 수 있어요. 33%가 기본이에요."},
+  {a:"빌런 체크",o:[["check","체크"],["b50","베팅 50%"],["b75","베팅 75%"]],f:{check:65,b50:25,b75:10},h:"오버카드 두 장 · 페어 보드",
+   n:"보드가 페어가 되면 콜러의 J·8·포켓 페어가 잘 안 접어요. 오버카드만으로 두 번째 배럴은 폴드 에퀴티가 낮아 체크로 공짜 카드를 받는 쪽이 기본이에요. 가끔 A 블로커로 베팅을 섞어요."},
+  {a:"빌런 체크",o:[["check","체크"],["b50","베팅 50%"],["b75","베팅 75%"]],f:{check:70,b50:5,b75:25},h:"A 하이 · 페어 보드",
+   n:"다이아 드로우가 빗나갔어요. A 하이는 놓친 드로우에는 이기는 쇼다운 가치가 있어 체크가 기본이에요. 블러프하면 99·TT 같은 페어가 콜할 때가 많아서 큰 사이즈 블러프만 가끔 섞어요."}]},
+ "CO|Q♣9♣|MP":{vh:["A♠","J♠"],s:[
+  {a:"빌런 체크 (3벳에 콜)",o:[["check","체크"],["b33","베팅 33%"],["b66","베팅 66%"]],f:{check:45,b33:50,b66:5},h:"오버카드 한 장 · 거트샷 · 투톤 J 하이 보드",
+   n:"J-8-6은 콜러 레인지(JT·98·T9·포켓 페어)를 잘 맞히는 보드라 3벳한 쪽도 체크가 늘어요. Q9는 거트샷(T)과 오버카드 Q, 백도어 클럽이 있어 33% 세미블러프로 쓰기 좋아요. 체크도 비슷하게 섞어요."},
+  {a:"빌런 체크",o:[["check","체크"],["b50","베팅 50%"],["b75","베팅 75%"]],f:{check:35,b50:50,b75:15},h:"플러시 드로우 + 거트샷 · 아웃츠 12장 · 페어 보드",
+   n:"턴 J♣로 플러시 드로우가 생겨 아웃츠가 12장이에요. 맞으면 이기고 빌런이 접어도 이기니 50% 세미블러프가 좋아요. 빌런의 J는 안 접지만 77·99·TT 같은 페어는 접게 할 수 있어요."},
+  {a:"빌런 체크",o:[["check","체크"],["b75","베팅 75%"],["jam","올인"]],f:{check:70,b75:20,jam:10},h:"Q 하이 · 드로우 빗나감 · 페어 보드",
+   n:"드로우가 모두 빗나갔어요. 두 번 콜한 빌런 레인지엔 J·8 같은 강한 핸드가 많아 블러프가 잘 안 통해요. 9 블로커(97 스트레이트)가 있어 가끔 블러프를 섞지만 체크 후 포기가 기본이에요."}]},
+ "BB|K♣9♣|SB":{vh:["A♦","T♦"],s:[
+  {a:"빌런 체크 (3벳에 콜)",o:[["check","체크"],["b33","베팅 33%"],["b66","베팅 66%"]],f:{check:30,b33:25,b66:45},h:"탑페어 약한 키커 · 드로우가 많은 9 하이 보드",
+   n:"탑페어지만 플러시 드로우·스트레이트 드로우가 많은 보드라 공짜 카드를 주기 싫어요. 66%로 드로우에 값을 치르게 하고 보호해요. 체크로 팟을 조절하는 것도 섞어요."},
+  {a:"빌런 체크",o:[["check","체크"],["b50","베팅 50%"],["b75","베팅 75%"]],f:{check:40,b50:50,b75:10},h:"탑페어 약한 키커 · 드로우가 많은 9 하이 보드",
+   n:"블랭크 카드예요. 드로우가 아직 많이 남아 있어 50%로 한 번 더 밸류와 보호를 챙겨요. 키커가 약해 크게 키우진 않고 체크도 섞어요."},
+  {a:"빌런 올인",o:[["fold","폴드"],["call","콜"]],f:{fold:75,call:25},h:"탑페어 약한 키커 · 플러시·스트레이트가 완성된 보드 · 필요 승률 약 30%",
+   n:"리버 6♦는 플러시(다이아)와 스트레이트(7x)를 동시에 완성해요. 두 번 콜한 빌런이 이런 카드에 먼저 올인(리드)하면 완성된 핸드가 많아요. 탑페어 약한 키커로는 폴드가 기본이고, 블러프가 많은 상대에게만 콜을 섞어요."}]}};
+function lineFix(){let n=0;LEVELS[0].hands.forEach(h=>{const L=LINE3B[h.me+"|"+h.hand.join("")+"|"+h.vs];if(!L||h.alt)return;
+  if(L.s.length!==h.s.length-1)return;
+  h.alt={k:"call",vh:h.vh,s:h.s.slice(1)};h.vh=L.vh;h.s=[h.s[0]].concat(L.s.map((x,i)=>Object.assign({b:h.s[i+1].b},x)));delete h.__t;n++});return n}
 // ===================== 핸드 마크 (11/6) =====================
 // 결과 화면에서 별로 마크 → 태그·메모. 더보기 → 마크한 핸드에서 모아 보기, 스트리트별 다시 보기, 다시 풀기(점수·순위 제외).
 // 이 기기에 저장하고, 가입한 플레이어는 내 계정(hmark/{uid})에도 저장해 다른 기기에서도 보여요. 최대 100개.
@@ -3511,10 +3557,11 @@ const NOTEFIX_BOARD={"BB|9♠7♠|3":"트립스지만 페어 보드라 풀하우
 function noteFix(){let n=0;LEVELS.forEach(L=>L.hands.forEach(h=>{const hk=h.me+"|"+h.hand.join("");if(KEYFIX[hk])h.key=KEYFIX[hk];(h.s||[]).forEach((s,si)=>{const t=NOTEFIX_BOARD[hk+"|"+si]||NOTEFIX[hk+"|"+si];if(t){s.n=t;n++}})}));return n}
 chartAlign();
 noteFix();
+lineFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611060038"></script>
+<script src="webgate.js?v=202611072028"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
