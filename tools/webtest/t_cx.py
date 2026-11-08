@@ -37,6 +37,11 @@ async def main():
                 for v in r['vr']:st[v.split(' (')[0]]+=1
                 if r['ended']=='vfold':st['빌런 폴드로 끝']+=1
                 if 0.3 in r['ws']:st['비중 0.3 결정 포함']+=1
+        # 1순위만 고르면 계산 모드로 가지 않아야 해요(대본대로 끝까지)
+        topcx=await pg.evaluate("""()=>{const bad=[];LEVELS[0].hands.forEach((h,i)=>{start(0);order[hi]=h;newHand();
+            for(let k=0;k<20;k++){const c=G.sub||G.cur;if(!document.querySelector('#panel button[data-k]'))break;const mo=mergedOF(c);choose(bestOf(mo.o,mo.f))}
+            if(G.cx)bad.push(i)});return bad}""")
+        if topcx:bad.append(f'1순위만 골랐는데 계산 모드: {topcx[:10]}')
         errs=[e for e in pg.errs if 'ERR_FAILED' not in e];bad+=errs[:5]
         # 화면 확인용 스크린샷: 계산 모드 핸드 하나
         await pg.set_viewport_size({'width':390,'height':844})

@@ -4,7 +4,7 @@ import subprocess,sys,os,re,json,time
 HERE=os.path.dirname(os.path.abspath(__file__));ROOT=os.path.dirname(os.path.dirname(HERE))
 TESTS=[("데이터(카드 중복·빈도 합)","t_chk.py"),("종합 점수·평균 계산","t_avg.py"),("측정 중 플레이어 숨김","t_wait.py"),
  ("가입·이어하기·차단·초기화","t_web2.py"),("종합 5판 규칙","t_all.py"),("30초 타이머","t_timer.py"),("코치 보드","t_coach.py"),("코치 기록 기기 간 합치기","t_coachsync.py"),
- ("코치 상세 분석","t_coachdetail.py"),("결과 카드(F안)","t_resultcards.py"),("시작 화면·하단 메뉴 5칸","t_home.py"),("문제 출제(중복·비슷한 문제 간격)","t_deal.py"),("계산 모드·OOP 첫 행동·빌런 반응","t_cx.py"),("핸드 마크·평균 스택","t_mark.py"),("3벳 라인 대본(동크 B안)","t_line3b.py"),("프리플랍 정답·차트 일치","t_chartalign.py"),("차트 탭(상황·스택·포지션 전부)","t_charttab.py"),("3벳·4벳 크기 기준","t_stdrules.py"),("핸드 복기(C안)","t_review.py"),("핸드 복기 팟 계산","t_review2.py"),("핸드 복기 저장(내 계정)","t_review3.py"),("핸드 복기 가독성","t_review4.py"),("퀴즈 해설·정답 일치","t_notes.py"),("오픈 연습 220개 상황·헤즈업 해설","t_pfdrill.py"),
+ ("코치 상세 분석","t_coachdetail.py"),("결과 카드(F안)","t_resultcards.py"),("시작 화면·하단 메뉴 5칸","t_home.py"),("문제 출제(중복·비슷한 문제 간격)","t_deal.py"),("계산 모드·OOP 첫 행동·빌런 반응","t_cx.py"),("핸드 마크·평균 스택","t_mark.py"),("3벳 라인 대본(IP 5·OOP 15핸드)","t_line3b.py"),("프리플랍 정답·차트 일치","t_chartalign.py"),("차트 탭(상황·스택·포지션 전부)","t_charttab.py"),("3벳·4벳 크기 기준","t_stdrules.py"),("핸드 복기(C안)","t_review.py"),("핸드 복기 팟 계산","t_review2.py"),("핸드 복기 저장(내 계정)","t_review3.py"),("핸드 복기 가독성","t_review4.py"),("퀴즈 해설·정답 일치","t_notes.py"),("오픈 연습 220개 상황·헤즈업 해설","t_pfdrill.py"),
  ("전수 풀이(350핸드×4경로+연습400)","t_playall.py")]
 BADWORDS=re.compile(r'Traceback|AssertionError|FAIL|NaN|undefined|✗|❌|오류:|이상 있음')
 res=[]

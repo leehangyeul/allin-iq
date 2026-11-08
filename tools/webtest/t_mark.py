@@ -85,8 +85,12 @@ async def main():
         await pa.click('.mkr');await asyncio.sleep(.1)
         chk('줄을 누르면 해설',bool(await pa.query_selector('.mkn2')))
         await pa.screenshot(path=SHOT+'w_detail.png',full_page=True)
+        await pa.set_viewport_size({'width':320,'height':700});await asyncio.sleep(.2)
+        ovd=await pa.evaluate("()=>document.documentElement.scrollWidth-document.documentElement.clientWidth")
+        chk('다시 보기 320폭 가로 넘침 없음',ovd<=0,ovd)
+        await pa.set_viewport_size({'width':390,'height':844})
         nan=await pa.evaluate("()=>/NaN|undefined|\\[object/.test(document.getElementById('panel').innerText)")
-        chk('NaN 없음',not nan)
+        chk('숫자 깨짐 표시 없음',not nan)
         # 다시 풀기: 점수 제외
         n1=await pa.evaluate("()=>STATS.n");await pa.click('#mkre');await asyncio.sleep(.3)
         chk('다시 풀기 표시',(await pa.evaluate("()=>document.getElementById('top').innerText")).find('다시 풀기')>=0)
