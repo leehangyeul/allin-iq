@@ -115,9 +115,12 @@ const cardTxt = c => RANK_CH[c >> 2] + SUITSYM[c & 3];
 function kindOf(o) { const k = o.kind || o.k || ''; if (k === 'jam' || k === 'allin' || /올인/.test(o.label || '')) return 'allin'; if (k === 'fold') return 'fold'; if (k === 'bet' || k === 'raise' || k === '3bet') return 'bet'; return 'call'; }
 const KCOLOR = { fold: '#5B6170', call: '#7FB3F0', bet: '#D4AF7C', allin: '#C2474F' };
 function seatXY(k) { const ang = Math.PI / 2 + k * (2 * Math.PI / 9); return { x: 50 + 44 * Math.cos(ang), y: 47 + 39 * Math.sin(ang) }; }
-let lastBoardLen = 0;
+let lastBoardLen = 0, betBase = {}, betBaseLen = -1;
 function renderTable(v) {
   if (!v) return;
+  // 앞에 놓인 칩 = 이번 스트리트에 건 금액 (프리플랍에 넣은 칩은 팟으로)
+  if (v.board.length !== betBaseLen) { betBaseLen = v.board.length; betBase = {}; if (v.board.length) v.seats.forEach(s => betBase[s.pos] = s.inv); }
+  const streetBet = s => Math.max(0, s.inv - (betBase[s.pos] || 0));
   const heroIdx = SEAT_ORDER.indexOf(v.heroPos);
   const el = $('seats'); el.innerHTML = '';
   const sty = settings.styles || {};
@@ -137,7 +140,7 @@ function renderTable(v) {
     d.appendChild(box);
     if (s.lastAct) { const a = document.createElement('div'); a.className = 'act'; a.textContent = BBu(s.lastAct); d.appendChild(a); }
     el.appendChild(d);
-    if (s.inv > 0 && !v.result) { const b = document.createElement('div'); b.className = 'bet'; b.style.left = (x + (50 - x) * 0.34) + '%'; b.style.top = (y + (47 - y) * 0.34) + '%'; b.textContent = fmt(s.inv); el.appendChild(b); }
+    if (streetBet(s) > 0.001 && !v.result) { const b = document.createElement('div'); b.className = 'bet'; b.style.left = (x + (50 - x) * 0.34) + '%'; b.style.top = (y + (47 - y) * 0.34) + '%'; b.textContent = fmt(streetBet(s)); el.appendChild(b); }
     if (s.pos === 'BTN') { const m = document.createElement('div'); m.className = 'btnmark'; m.textContent = 'D'; m.style.left = (x + (50 - x) * 0.3) + '%'; m.style.top = (y + (47 - y) * 0.3 - 6) + '%'; el.appendChild(m); }
   });
   const hero = v.seats.find(s => s.hero);
@@ -145,7 +148,7 @@ function renderTable(v) {
   (hero.cards || [null, null]).forEach(c => hh.appendChild(cardEl(c, 'big')));
   el.appendChild(hh);
   const hb = document.createElement('div'); hb.className = 'herobar';
-  hb.innerHTML = `<span>히어로 ${POS_KO[v.heroPos]}${hero.pos === 'BTN' ? ' · D' : ''}</span><b>${fmt(hero.stack)}<small style="font-size:11px">BB</small></b>${hero.inv > 0 && !v.result ? `<small class="mono" style="color:var(--gold-2)">베팅 ${fmt(hero.inv)}</small>` : ''}`;
+  hb.innerHTML = `<span>히어로 ${POS_KO[v.heroPos]}${hero.pos === 'BTN' ? ' · D' : ''}</span><b>${fmt(hero.stack)}<small style="font-size:11px">BB</small></b>${streetBet(hero) > 0.001 && !v.result ? `<small class="mono" style="color:var(--gold-2)">베팅 ${fmt(streetBet(hero))}</small>` : ''}`;
   el.appendChild(hb);
   const bd = $('board'); bd.innerHTML = '';
   for (let i = 0; i < 5; i++) {
@@ -196,15 +199,58 @@ function showActions(info) {
   $('waiting').hidden = true;
   const la = lastVillainAct();
   $('status').innerHTML = la ? `<em>${esc(la)}</em> → 히어로 차례` : '히어로 차례';
-  const box = $('actions'); box.innerHTML = '';
+  const box = $('actions'); box.innerHTML = ''; $('sizer').hidden = true; $('sizer').innerHTML = '';
+  const pick = v => { if (!pendingAction) return; const r = pendingAction; pendingAction = null; box.innerHTML = ''; $('sizer').hidden = true; $('sizer').innerHTML = ''; $('status').textContent = ''; wait('진행 중…'); r(v); };
+  if (info.sizing) return showSizer(info, pick);
   info.options.forEach((o, i) => {
     const [main, sub] = splitLabel(o);
     const b = document.createElement('button'); b.type = 'button';
     b.id = 'act-' + i; b.className = 'k-' + kindOf(o);
     b.innerHTML = `<span>${esc(main)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}`;
-    b.onclick = () => { if (!pendingAction) return; const r = pendingAction; pendingAction = null; box.innerHTML = ''; $('status').textContent = ''; wait('진행 중…'); r(i); };
+    b.onclick = () => pick(i);
     box.appendChild(b);
   });
+}
+// 플랍부터: 베팅·레이즈 크기를 BB로 직접 정해요 (−/+ · 슬라이더 · 1/3~팟·올인). 솔버 기본 크기가 아니면 그 크기로 다시 계산해요.
+const r1 = x => Math.round(x * 10) / 10;
+function showSizer(info, pick) {
+  const z = info.sizing, box = $('actions'), el = $('sizer');
+  const isRaise = z.kind === 'raise', word = isRaise ? '레이즈' : '베팅';
+  const min = r1(Math.min(z.max, Math.max(z.min, 0.1))), max = r1(z.max);
+  const clamp = v => { v = r1(v); if (!(v >= min)) v = min; if (v > max) v = max; return v; };
+  const presetTo = f => isRaise ? z.opp + f * (z.pot + z.facing) : z.me + f * z.pot;
+  const potPct = to => isRaise ? (to - z.opp) / Math.max(0.01, z.pot + z.facing) : (to - z.me) / Math.max(0.01, z.pot);
+  let val = clamp(z.def);
+  const P = [['1/3', 1 / 3], ['1/2', 0.5], ['2/3', 2 / 3], ['3/4', 0.75], ['팟', 1], ['올인', null]];
+  el.hidden = false;
+  el.innerHTML = `<div class="szrow"><span class="szl">${word} 크기</span><button type="button" class="szb" id="sz-m" aria-label="줄이기">−</button>
+      <label class="szv"><input id="sz-in" type="number" inputmode="decimal" step="0.1" min="${min}" max="${max}" aria-label="${word} 크기 BB"><span>BB</span></label><button type="button" class="szb" id="sz-p" aria-label="늘리기">＋</button></div>
+    <input id="sz-r" type="range" min="${min}" max="${max}" step="0.1" aria-label="${word} 크기 슬라이더">
+    <div class="szlb"><span>최소 ${fmt(min)}BB</span><span id="sz-pct"></span><span>올인 ${fmt(max)}BB</span></div>
+    <div class="szps">${P.map(([t, f], i) => `<button type="button" data-p="${i}">${t}</button>`).join('')}</div>
+    <p class="note" style="text-align:left">${isRaise ? '레이즈는 이번 스트리트 총액이에요. ' : ''}솔버 기본 크기와 다르면 그 크기로 다시 계산해서 빌런이 대응해요${info.street === 'flop' ? '(플랍은 10~30초 더 걸려요)' : ''}.</p>`;
+  const inp = $('sz-in'), rg = $('sz-r');
+  const btns = [];
+  info.options.forEach((o, i) => { const k = o.kind; if (k === 'fold' || k === 'check' || k === 'call') { const [main, sub] = splitLabel(o); const b = document.createElement('button'); b.type = 'button'; b.id = 'act-' + i; b.className = 'k-' + kindOf(o); b.innerHTML = `<span>${esc(main)}</span>${sub ? `<small>${esc(sub)}</small>` : ''}`; b.onclick = () => pick(i); btns.push(b); } });
+  const go = document.createElement('button'); go.type = 'button'; go.id = 'act-size';
+  go.onclick = () => pick({ to: val });
+  btns.push(go); btns.forEach(b => box.appendChild(b));
+  const show = (from) => {
+    const all = val >= max - 1e-9;
+    if (from !== 'in') inp.value = val.toFixed(1);
+    if (from !== 'rg') rg.value = val;
+    $('sz-pct').textContent = `팟의 ${Math.round(potPct(val) * 100)}%`;
+    go.className = all ? 'k-allin' : 'k-bet';
+    go.innerHTML = all ? `<span>올인 ${fmt(val)}BB</span>` : `<span>${word} ${fmt(val)}BB</span><small>팟의 ${Math.round(potPct(val) * 100)}%</small>`;
+  };
+  inp.oninput = () => { const v = parseFloat(inp.value); if (isFinite(v) && v >= min && v <= max) { val = r1(v); show('in'); } };
+  inp.onchange = () => { val = clamp(parseFloat(inp.value)); show(); };
+  rg.oninput = () => { val = clamp(parseFloat(rg.value)); show('rg'); };
+  const step = () => val >= 20 ? 1 : 0.5;
+  $('sz-m').onclick = () => { val = clamp(val - step()); show(); };
+  $('sz-p').onclick = () => { val = clamp(val + step()); show(); };
+  el.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const f = P[+b.dataset.p][1]; val = f == null ? max : clamp(presetTo(f)); show(); });
+  show();
 }
 function wait(t) { const w = $('waiting'); w.hidden = !t; w.textContent = t || ''; }
 
@@ -279,7 +325,7 @@ const io = {
     if (p.done) { el.hidden = true; return; }
     el.hidden = false;
     const name = { flop: '플랍', turn: '턴', river: '리버' }[p.street];
-    $('solve-t').textContent = `${name} 솔버 계산 ${p.iter}/${p.maxIter}`;
+    $('solve-t').textContent = p.custom ? `내 ${name} 베팅 크기로 다시 계산 ${p.iter}/${p.maxIter}` : `${name} 솔버 계산 ${p.iter}/${p.maxIter}`;
     $('solve-b').style.width = Math.min(100, p.iter / p.maxIter * 100) + '%';
     wait('솔버가 이 스팟을 푸는 중…');
   },

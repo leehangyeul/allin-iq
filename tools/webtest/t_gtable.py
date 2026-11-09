@@ -87,6 +87,31 @@ async def main():
         chk('핸드 진행·결과 화면 문구 이상 없음',ends>=3 and not [x for x in bad if x!='BUST'],(ends,acts,bad[:2]))
         chk('스택·핸드 수가 계정에 저장',a['s']>0 and abs(d1.get('s',-1)-a['s'])<0.01 and d1.get('th')==a['th'] and a['th']>=3,(d1.get('s'),d1.get('th'),a))
         await pa.screenshot(path=SHOT+'w_table.png')
+        # 플랍부터 BB 직접 베팅: 크기 칸(−/+·슬라이더·1/3~팟·올인) → 솔버 기본 크기가 아니면 그 크기로 다시 계산 → 빌런이 대응
+        done=None;t0=time.time()
+        while done is None and time.time()-t0<200:
+            if await f.evaluate("()=>!!document.querySelector('#bz-quiz')"):break
+            if await f.evaluate("()=>{const b=document.querySelector('#sh-next');return !!(b&&b.offsetParent)}"):
+                await f.evaluate("()=>document.querySelector('#sh-next').click()");await asyncio.sleep(.2);continue
+            if await f.evaluate("()=>!document.getElementById('sizer').hidden&&!!document.getElementById('act-size')"):
+                z=await f.evaluate("()=>({min:+document.getElementById('sz-r').min,max:+document.getElementById('sz-r').max,lbl:document.getElementById('sizer').innerText})")
+                await f.evaluate("()=>document.querySelector('#sizer [data-p=\"4\"]').click()");pot_v=await f.evaluate("()=>+document.getElementById('sz-in').value")
+                want=round(min(z['max'],max(z['min'],z['min']+(z['max']-z['min'])*0.37)),1)
+                await f.fill('#sz-in',str(want));await f.evaluate("()=>document.getElementById('sz-in').dispatchEvent(new Event('change'))")
+                btn=await f.evaluate("()=>document.getElementById('act-size').innerText")
+                await pa.screenshot(path=SHOT+'w_sizer.png')
+                await f.evaluate("()=>document.getElementById('act-size').click()")
+                for _ in range(120):
+                    await asyncio.sleep(.5)
+                    lg=await f.evaluate("()=>game.hand.log.filter(l=>l.hero).map(l=>l.text)")
+                    if lg and any(('%.1f'%want) in x for x in lg[-1:]):break
+                    if await f.evaluate("()=>!!document.querySelector('#sh-next')&&!!document.querySelector('#sh-next').offsetParent"):break
+                done=(want,btn,lg[-1] if lg else '',z,pot_v);break
+            k=await f.evaluate("()=>{const bs=[...document.querySelectorAll('#actions button')];if(!bs.length)return -1;const t=b=>b.innerText;const pre=!game.hand.board.length;let i=bs.findIndex(b=>/^체크/.test(t(b)));if(i<0&&pre)i=bs.findIndex(b=>/^(콜|림프)/.test(t(b))&&!/allin/.test(b.className));if(i<0)i=bs.findIndex(b=>/^폴드/.test(t(b)));return i<0?0:i}")
+            if k>=0:await f.evaluate("(k)=>document.querySelectorAll('#actions button')[k].click()",k)
+            await asyncio.sleep(.25)
+        chk('플랍부터 BB 직접 베팅(입력한 크기 그대로)',bool(done) and ('%.1f'%done[0]) in done[2] and ('%.1fBB'%done[0]) in done[1] and '팟' in done[3]['lbl'],done and (done[0],done[1].replace('\n',' '),done[2]))
+        errs_now=await f.evaluate("()=>window.__errs||[]")
         # 닫았다 다시 열면 같은 스택
         await pa.click('#gtClose');await asyncio.sleep(.4)
         card2=await pa.evaluate("()=>document.getElementById('goGt').innerText")

@@ -97,6 +97,19 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .actions button.k-bet small,.actions button.k-raise small{color:#3A2B14}
 .actions button.k-allin{border-color:rgba(194,71,79,.8);background:#2A1215;color:#FFD9D6}
 .actions button.k-fold{color:var(--soft)}
+.sizer{border:1px solid var(--line-2);border-radius:16px;background:var(--surface-2);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.szrow{display:flex;align-items:center;gap:8px}
+.szl{flex:none;font-size:13px;color:var(--soft);font-weight:700}
+.szb{flex:none;width:44px;height:44px;border-radius:12px;border:1px solid var(--line-2);background:var(--surface);font-size:20px;font-weight:700;color:var(--gold-3)}
+.szv{flex:1;min-width:0;display:flex;align-items:baseline;justify-content:center;gap:4px;height:44px;border-radius:12px;border:1px solid rgba(212,175,124,.6);background:#0D1018;padding:0 8px}
+.szv input{width:100%;min-width:0;border:0;background:none;color:var(--gold-2);font:700 22px var(--mono);text-align:right;padding:6px 0;-webkit-user-select:text;user-select:text;-moz-appearance:textfield}
+.szv input::-webkit-outer-spin-button,.szv input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.szv input:focus{outline:none}.szv:focus-within{box-shadow:0 0 0 2px var(--gold)}
+.szv span{font:700 13px var(--mono);color:var(--muted)}
+.sizer input[type=range]{width:100%;accent-color:#D4AF7C;height:28px}
+.szlb{display:flex;justify-content:space-between;font:500 11px var(--mono);color:var(--muted)}
+.szps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.szps button{min-height:40px;border-radius:10px;border:1px solid var(--line-2);background:var(--surface);color:var(--soft);font-size:13px;font-weight:700;padding:0}
 .waiting{color:var(--muted);font-size:14px;text-align:center;padding:6px 0}
 .note{font-size:12px;color:var(--muted);line-height:1.5;text-align:center;margin:0}
 .primary{border:0;background:linear-gradient(160deg,#F0D7AE,#C79E66 55%,#A9824E);color:#0B0A08;border-radius:16px;min-height:52px;font-weight:900;font-size:16px;width:100%}
@@ -195,6 +208,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
       <div class="status" id="status" aria-live="polite"></div>
       <div class="solve" id="solve" hidden><span id="solve-t">계산 중</span><div class="bar"><i id="solve-b"></i></div></div>
       <div class="waiting" id="waiting" hidden></div>
+      <div class="sizer" id="sizer" hidden></div>
       <div class="actions" id="actions"></div>
       <button class="primary" id="b-start" type="button" hidden>게임 시작</button>
       <p class="note">핸드 중엔 힌트가 없어요. 채점은 핸드가 끝난 뒤 결과 화면에서 봐요.</p>

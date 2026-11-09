@@ -48,6 +48,67 @@ rep("    const s = out.reduce((a, b) => a + b, 0);\n    return s > 0 ? out.map(x
 rep("if (S.stackMode !== 'mixed' || pos === heroPos) return stack;",
     "if (pos === heroPos) return S.heroStack != null ? S.heroStack : stack; if (S.stackMode !== 'mixed') return stack;")
 
+# ---- free bet sizing after the flop (11/9): a size that is not in the solver tree re-solves the rest of the street from that spot
+# with the hero's size added (subgame), so the villain's answer and the grading both use the real amount
+SOLVER_PATCH = [
+  ("this.root = this.build({ street: this.street, c: [0, 0], base: 0, toAct: 0, raises: 0, checked: false, board: this.board.slice() });",
+   "const rs = cfg.rootState; this.root = this.build(rs ? { street: this.street, c: rs.c.slice(), base: rs.base || 0, toAct: rs.toAct, raises: rs.raises || 0, checked: !!rs.checked, board: this.board.slice(), extra: rs.extra } : { street: this.street, c: [0, 0], base: 0, toAct: 0, raises: 0, checked: false, board: this.board.slice() });"),
+  ("  build(st) {\n    const { c, base, toAct } = st;",
+   "  build(st) {\n    const extra = st.extra; if (extra != null) st = { ...st, extra: null };\n    const { c, base, toAct } = st;"),
+  ("    const node = { t: 'A', p: toAct, acts, ch: [], c0: c[0], c1: c[1], street: st.street, board: st.board };",
+   "    if (extra != null) addAct(facing <= 1e-9 ? 'bet' : 'raise', extra);\n    const node = { t: 'A', p: toAct, acts, ch: [], c0: c[0], c1: c[1], street: st.street, board: st.board, base: st.base, raises: st.raises, checked: st.checked };"),
+]
+for o_, n_ in SOLVER_PATCH: rep(o_, n_)
+import json as _json
+_i = data.index('const ENGINE_SRC = "'); _j = data.index('\n', _i)
+_lit = data[_i + len('const ENGINE_SRC = '):_j].rstrip(';')
+_src = _json.loads(_lit)
+for o_, n_ in SOLVER_PATCH:
+    assert _src.count(o_) == 1, o_[:60]; _src = _src.replace(o_, n_)
+data = data[:_i] + 'const ENGINE_SRC = ' + _json.dumps(_src) + ';' + data[_j:]
+# Game.postflop: hero sizing info + re-solve when the hero's size is new
+rep("      const d = new _G.DistSolver(cfg, io.endpoints || []);\n      await d.init();", "      let d = new _G.DistSolver(cfg, io.endpoints || []);\n      await d.init();")
+rep("      const m = d.master;\n      // 스트리트 레인지 정보", "      let m = d.master;\n      // 스트리트 레인지 정보")
+rep("      const path = [];\n      let node = m.root;", "      let path = [];\n      let node = m.root;")
+rep("""          const q = await d.query(path);
+          const hi = m.handIndex(node.p, cfg.forceCombos[node.p]);
+          const opts = node.acts.map((ac, k) => ({ label: this.actLabel(ac, node, actor), kind: ac.k, freq: q.strat[k * q.n + hi], ev: q.evA[k][hi] }));""",
+"""          let q = await d.query(path);
+          let hi = m.handIndex(node.p, cfg.forceCombos[node.p]);
+          const mkOpts = () => node.acts.map((ac, k) => ({ label: this.actLabel(ac, node, actor), kind: ac.k, freq: q.strat[k * q.n + hi], ev: q.evA[k][hi] }));
+          let opts = mkOpts();""")
+rep("""          a = await io.heroAction({ street: h.street, options: opts.map(o => ({ label: o.label, kind: o.kind, freq: o.freq, ev: o.ev })), hud, pot: this.potTotal() });""",
+"""          a = await io.heroAction({ street: h.street, options: opts.map(o => ({ label: o.label, kind: o.kind, freq: o.freq, ev: o.ev })), hud, pot: this.potTotal(), sizing: this.sizing(node) });
+          if (a && typeof a === 'object') {
+            const agg = ac => ac.k === 'bet' || ac.k === 'raise' || ac.k === 'allin';
+            const X = Math.min(+a.to, h.streetStack), tol = Math.max(0.05, 0.02 * (h.streetStartPot + node.c0 + node.c1));
+            let k = node.acts.findIndex(ac => agg(ac) && Math.abs(ac.to - X) <= tol);
+            if (k < 0) {
+              const cfg2 = { ...cfg, turnCards: h.street === 'flop' ? Math.min(cfg.turnCards || 99, PRECISION.normal.turnCards) : cfg.turnCards, ranges: m.rangesAfter(path), rootState: { c: [node.c0, node.c1], base: node.base || 0, toAct: node.p, raises: node.raises || 0, checked: !!node.checked, extra: X } };
+              const d2 = new _G.DistSolver(cfg2, io.endpoints || []);
+              await d2.init();
+              io.solving({ street: h.street, iter: 0, maxIter: prec.maxIter, expl: null, ms: 0, done: false, custom: true });
+              await d2.solve({ maxIter: prec.maxIter, targetPct: prec.targetPct, checkEvery: 10, onProgress: p => io.solving({ street: h.street, ...p, done: false, custom: true }) });
+              io.solving({ street: h.street, iter: d2.master.iter, maxIter: prec.maxIter, done: true, custom: true });
+              await d.dispose(); d = d2; m = d2.master; path = []; node = m.root;
+              q = await d.query(path); hi = m.handIndex(node.p, cfg.forceCombos[node.p]); opts = mkOpts();
+              k = node.acts.findIndex(ac => agg(ac) && Math.abs(ac.to - X) <= 1e-6);
+              if (k < 0) k = node.acts.findIndex(ac => agg(ac) && Math.abs(ac.to - X) <= tol);
+              h.resolves = (h.resolves || 0) + 1;
+            }
+            a = Math.max(0, k);
+          }""")
+rep("""  applyStyle(acts, probs, pos) {""","""  // 히어로가 직접 정하는 베팅·레이즈 크기 (이번 스트리트 총액 기준 to)
+  sizing(node) {
+    const h = this.hand, me = node.p, cMe = me === 0 ? node.c0 : node.c1, cOp = me === 0 ? node.c1 : node.c0, S = h.streetStack;
+    const agg = node.acts.filter(ac => ac.k === 'bet' || ac.k === 'raise' || ac.k === 'allin');
+    if (!agg.length || cMe >= S - 1e-9) return null;
+    const facing = cOp - cMe, pot = h.streetStartPot + node.c0 + node.c1;
+    const min = facing > 1e-9 ? Math.min(S, 2 * cOp - cMe) : Math.min(S, cMe + 1);
+    return { kind: facing > 1e-9 ? 'raise' : 'bet', me: cMe, opp: cOp, facing, pot, min, max: S, def: agg[0].to, tree: agg.map(ac => ac.to) };
+  }
+  applyStyle(acts, probs, pos) {""")
+
 # ---- texts: no source names, no prize words (ICM is off here: stage is always 'early')
 eng = '\n'.join(l for l in eng.split('\n') if not (l.lstrip().startswith('//') and re.search(r'Little|Jonathan|Wizard|Negreanu|PokerCoaching|상금|강의|교재', l)))
 rep(" (Little·Negreanu 공통).", ".")
