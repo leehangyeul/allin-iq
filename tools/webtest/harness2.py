@@ -37,6 +37,7 @@ def can_read(path,u):
     if col=='coach':return u['uid']==id or is_admin(u) or claims_old(u,id)
     if col=='hreview':return u['uid']==id or is_admin(u) or claims_old(u,id)
     if col=='hmark':return u['uid']==id or is_admin(u) or claims_old(u,id)
+    if col=='gtable':return u['uid']==id or is_admin(u) or claims_old(u,id)
     return col in ('meta','scores','names')
 def can_write(path,d,u,delete=False):
     if not u:return False
@@ -61,6 +62,14 @@ def can_write(path,d,u,delete=False):
     if col=='hmark':
         if delete:return is_admin(u) or claims_old(u,id)
         ok=set(d)<={'m','at'} and isinstance(d.get('at'),(int,float)) and isinstance(d.get('m'),list) and len(d['m'])<=100
+        return is_admin(u) or (is_player(u) and u['uid']==id and is_member(id) and not blocked(id) and ok)
+    if col=='gtable':
+        if delete:return is_admin(u) or claims_old(u,id)
+        try:ok=(set(d)<={'name','s','h','best','ev','dn','good','life','lh','bn','bust','day','dh','th','st','at'} and isinstance(d.get('name'),str) and len(d['name'])<=12
+            and all(num(d.get(k)) for k in ['s','h','best','ev','dn','good','life','lh','bn','dh','th']) and d['s']<=100000 and d['good']<=d['dn']
+            and isinstance(d.get('bust'),(int,float)) and d['bust']>=0 and isinstance(d.get('day'),(int,float)) and 0<=d['day']<=99991231 and isinstance(d.get('at'),(int,float))
+            and isinstance(d.get('st'),list) and len(d['st'])<=8)
+        except Exception:ok=False
         return is_admin(u) or (is_player(u) and u['uid']==id and is_member(id) and not blocked(id) and ok)
     if col=='hreview':
         if delete:return is_admin(u) or claims_old(u,id)

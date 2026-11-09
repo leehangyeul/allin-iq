@@ -137,6 +137,28 @@ button:focus-visible,summary:focus-visible{outline:2px solid var(--hero);outline
 #hrov .hrbar button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid #3A3F4B;background:transparent;color:#EAD3AE;font-size:14px;font-weight:700}
 #hrov .hrbar span{font-size:15px;font-weight:700;color:#F8F9FB}
 #hrov iframe{flex:1;width:100%;border:0;background:#07090F}
+#gtov{position:fixed;inset:0;z-index:900;background:#07090F;display:flex;flex-direction:column}
+#gtov .hrbar{flex:none;display:flex;align-items:center;gap:8px;min-height:52px;padding:4px 10px;background:#0A0D14;box-shadow:0 1px 0 #1A1F2B}
+#gtov .hrbar button{min-height:44px;padding:0 14px;border-radius:999px;border:1px solid #3A3F4B;background:transparent;color:#EAD3AE;font-size:14px;font-weight:700}
+#gtov .hrbar span{font-size:15px;font-weight:700;color:#F8F9FB}
+#gtov iframe{flex:1;width:100%;border:0;background:#07090F}
+.hmgt{border-radius:18px;min-height:84px;padding:12px 18px 12px 12px;background:linear-gradient(160deg,#10201A,#0B0E12);border:1px solid rgba(127,212,160,.45);color:#F8F9FB;display:flex;align-items:center;gap:12px;text-align:left;width:100%}
+.hmgt .gtm{flex:none;position:relative;width:60px;height:46px;border-radius:23px/20px;background:radial-gradient(110% 80% at 50% 38%,#1A2130,#0A0D14);box-shadow:inset 0 0 0 1.5px rgba(212,175,124,.7)}
+.hmgt .gtm i{position:absolute;top:15px;width:9px;height:13px;border-radius:2px;background:#FBF6EC}
+.hmgt .gtm i:nth-child(1){left:15px}.hmgt .gtm i:nth-child(2){left:26px}.hmgt .gtm i:nth-child(3){left:37px}
+.hmgt .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.hmgt b{font-size:17px}.hmgt small{font-size:12px;line-height:1.5;color:#C9C3B8}
+.hmgt .nw{font-style:normal;font-size:10px;font-weight:900;margin-right:6px;padding:2px 7px;border-radius:999px;background:#7FD4A0;color:#07120C;vertical-align:2px}
+.hmgt .gl{color:#A7E3BE}
+.gseg{display:grid;grid-template-columns:repeat(auto-fit,minmax(56px,1fr));gap:6px;margin:6px 0 12px}
+.gseg button{min-height:40px;border-radius:10px;border:1px solid #2A2F3B;background:transparent;color:#C9C3B8;font-size:14px;font-weight:600}
+.gseg button.on{border-color:#D4AF7C;background:rgba(212,175,124,.14);color:#F6E4C4;font-weight:800}
+.gtst{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:6px 0 12px}
+.gtst div{border-radius:10px;border:1px solid #1A1F2B;background:#0A0D14;padding:6px 9px;display:flex;flex-direction:column}
+.gtst span{font-size:11px;color:#A39C8E}.gtst b{font-size:16px}
+.gtrow{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #1A1F2B;font-size:14px}
+.gtrow .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gtrow .n small{display:block;font-size:11px;color:#A39C8E}
+.gtrow b{font-variant-numeric:tabular-nums}.gtrow b.z{color:#F08A80}
+.gtrow button{flex:none;min-height:36px;padding:0 12px;border-radius:10px;border:1px solid rgba(212,175,124,.6);background:#231D13;color:#F0D7AE;font-size:13px;font-weight:800}
 .mnavsp{height:84px}
 .mnav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,420px);box-sizing:border-box;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:6px 8px calc(10px + env(safe-area-inset-bottom,0px));background:#0A0F1B;box-shadow:0 -1px 0 #1E2940}
 @media (min-width:600px){.mnav{width:min(100%,560px)}}
@@ -808,7 +830,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611082357";
+window.HGQ_WEB=true;window.APP_VERSION="202611091957";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -2924,6 +2946,8 @@ async function lbInit(){
   if(LB.uid)db.doc("coach/"+LB.uid).onSnapshot(sn=>coachPull(sn),()=>{CS.fail=true});
   if(LB.uid)db.doc("hreview/"+LB.uid).onSnapshot(sn=>hrPull(sn),()=>{});
   if(LB.uid)db.doc("hmark/"+LB.uid).onSnapshot(sn=>mkPull(sn),()=>{MK.srv=false});
+  if(LB.uid)db.doc("gtable/"+LB.uid).onSnapshot(sn=>gtPull(sn),()=>{});
+  db.doc("meta/gtable").onSnapshot(sn=>{GT.cfg=gtCfgClean((sn.exists&&sn.data())||{});if(SCREEN==="admin")gtAdminPaint()},()=>{});
   db.collection("scores").onSnapshot(snap=>{
     LB.rows=snap.docs.filter(d=>d.exists).map(d=>({id:d.id,...(d.data()||{})}));
     const first=!LB.rowsReady;LB.rowsReady=true;
@@ -3090,7 +3114,7 @@ async function lbReset(){
 // ---------- admin page (owner only) ----------
 function adminScreen(){
   if(!LB.owner){menu();return}
-  SCREEN="admin";LB.confirm=false;LB.del=null;LB.msg="";TE.draft=null;TE.msg="";TE.err="";
+  SCREEN="admin";LB.confirm=false;LB.del=null;LB.msg="";TE.draft=null;TE.msg="";TE.err="";GT.msg="";GT.arm=null;GT.rows=null;gtAdminLoad();
   $("top").innerHTML=topHTML("관리자 페이지","순위·플레이어 관리","",true);bindBack();
   $("prog").innerHTML="";$("stage").innerHTML="";
   adminRender();window.scrollTo({top:0});
@@ -3211,6 +3235,7 @@ function adminRender(){
    <div class="lb" id="adPl">${adminPlayersHTML()}</div>
    <div class="lb" id="adDiff">${diffAdminHTML()}</div>
    <div class="lb" id="adTier">${tierAdminHTML()}</div>
+   <div class="lb" id="adGt">${gtAdminHTML()}</div>
    ${accAdminHTML()}
    <div class="lb"><div class="lbh"><b>초기화</b></div>${reset}</div>
    <div class="lb"><div class="lbh"><b>공유·보안 설정</b></div><ul class="sec">
@@ -3223,7 +3248,7 @@ function adminRender(){
    <button class="ghost" id="adBack">처음 화면으로</button>`;
   if(keep&&$("accin"))$("accin").value=keep;
   lbBind();adminBindPlayers();
-  $("adBack").onclick=()=>menu();accAdminBind();tierAdminBind();diffAdminBind();
+  $("adBack").onclick=()=>menu();accAdminBind();tierAdminBind();diffAdminBind();gtAdminBind();
   const a=$("rsAsk");if(a)a.onclick=()=>{LB.confirm=true;LB.msg="";adminRender()};
   const n=$("rsNo");if(n)n.onclick=()=>{LB.confirm=false;adminRender()};
   const y=$("rsYes");if(y)y.onclick=lbReset;
@@ -3348,6 +3373,7 @@ function menu(){
       <div class="rc"><span class="rl">종합 점수</span>${m.ready?`<span class="rv">${m.ta}</span>${m.tt}`:`<span class="rv m">측정 중</span>`}</div></div><span class="rs">${ringSub}</span></div>
     <button class="hmcta" id="go" type="button"><span class="t"><b>핸드 퀴즈 ${STATS.n?"이어서":"시작"}</b><small>${STATS.n?`${STATS.n}판 완료 · 평균 ${m.ha}`:"첫 판을 시작해 보세요"}</small></span><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
     <button class="hmsub" id="go2" type="button"><span class="t"><b>오픈 연습 ${DSTATS.n?"이어서":"시작"}</b><small>${DSTATS.n?`${DSTATS.n}판 완료 · 평균 ${m.da}`:"첫 판을 시작해 보세요"}</small></span><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#D4AF7C" stroke-width="2.2" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
+    <button class="hmgt" id="goGt" type="button"><span class="gtm" aria-hidden="true"><i></i><i></i><i></i></span><span class="t"><b><em class="nw">NEW</em>GTO 홀덤 테이블</b><small>${gtSub()}</small></span><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#7FD4A0" stroke-width="2.2" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
     <button class="hmrv" id="goRv" type="button"><span class="ic" aria-hidden="true"></span><span class="t"><b>실전 핸드 복기${HR.list&&HR.list.length?`<em class="hrn">저장 ${HR.list.length}</em>`:""}</b><small>${HR.list&&HR.list.length?`최근: ${esc(String(HR.list[0].t||"").slice(0,40))}`:"펍에서 친 핸드를 넣으면 결정마다 해설해요"}</small></span><svg width="20" height="20" viewBox="0 0 22 22" fill="none" stroke="#D4AF7C" stroke-width="2.2" aria-hidden="true"><path d="M8 3l8 8-8 8"></path></svg></button>
     <div class="hmst"><div><b>${STATS.streak}</b><span>연속 90점+</span></div><div><b>${Math.max(STATS.best,DSTATS.best)}</b><span>최고 연속</span></div><div><b>${myRankText()}</b><span>내 종합 순위</span></div></div>
     </div>${menuNav("home")}`;
@@ -3355,6 +3381,7 @@ function menu(){
   $("go").onclick=()=>gateGo(()=>start(0));
   $("go2").onclick=()=>gateGo(()=>drillStart());
   $("goRv").onclick=()=>reviewOpen();
+  $("goGt").onclick=()=>gateGo(()=>{menu();gtOpen()});
 }
 // hand review: its own page (review/index.html) shown over the home screen; closing returns to the same home
 const REVIEW_URL="review/index.html";
@@ -3376,6 +3403,70 @@ function reviewOpen(){
   d.innerHTML=`<div class="hrbar"><button type="button" id="hrClose">‹ 홈</button><span>실전 핸드 복기</span></div><iframe id="hrFrame" title="핸드 복기" src="${REVIEW_URL}"></iframe>`;
   document.body.appendChild(d);
   document.getElementById("hrClose").onclick=reviewClose;
+}
+// ===== GTO 홀덤 테이블 (11/9): its own page (table/index.html) over the home screen; stack in gtable/{uid}, settings in meta/gtable (admin) =====
+const GT_URL="table/index.html",GT_DEF={start:40,regrant:"day",prec:"precise",diff:"hard"};
+const GT={cfg:{...GT_DEF},doc:null,rows:null,msg:"",arm:null};
+function gtCfgClean(d){const c={...GT_DEF};d=d||{};if([20,40,60,100].includes(+d.start))c.start=+d.start;if(["day","week","admin"].includes(d.regrant))c.regrant=d.regrant;if(["fast","normal","precise"].includes(d.prec))c.prec=d.prec;if(["easy","mid","hard"].includes(d.diff))c.diff=d.diff;return c}
+const gtYmd=t=>{const d=new Date(t+9*36e5);return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate()};
+window.GT_STORE={
+  who(){return {ok:!!(LB.db&&LB.uid&&hrMember()),name:MYNAME||"",wait:!LB.db}},
+  cfg(){return {...GT.cfg}},
+  async load(){if(!LB.db||!LB.uid)throw new Error("nodb");const sn=await LB.db.doc("gtable/"+LB.uid).get();return (sn.exists&&sn.data())||null},
+  async save(d){if(!LB.db||!LB.uid)throw new Error("nodb");await LB.db.doc("gtable/"+LB.uid).set(d);GT.doc=d;return true},
+  quiz(){gtClose();gateGo(()=>start(0))},
+  join(){gtClose();gateGo(()=>{menu();gtOpen()})}
+};
+function gtPull(sn){GT.doc=(sn&&sn.exists&&sn.data())||null;if(SCREEN==="menu"&&MENUTAB==="home"&&!document.getElementById("gtov")&&!document.getElementById("hrov"))menu()}
+function gtSub(){
+  const d=GT.doc;if(!d||typeof d.s!=="number")return `9인 토너먼트 테이블에서 ${GT.cfg.start}BB로 끝까지 쳐 보고, 결정마다 EV 손실로 채점받아요`;
+  if(d.s<=0)return `탈락 · 다시 받을 때까지 기다려요 (이번 판 ${d.h||0}핸드)`;
+  const td=d.day===gtYmd(Date.now())?(d.dh||0):0;
+  return `<span class="gl">내 스택 ${(+d.s).toFixed(1)}BB</span> · 오늘 ${td}핸드 · EV 손실 ${(+d.ev||0).toFixed(1)}BB`;
+}
+function gtOpen(){
+  if(document.getElementById("gtov"))return;
+  const d=document.createElement("div");d.id="gtov";d.setAttribute("role","dialog");d.setAttribute("aria-label","GTO 홀덤 테이블");
+  d.innerHTML=`<div class="hrbar"><button type="button" id="gtClose">‹ 홈</button><span>GTO 홀덤 테이블</span></div><iframe id="gtFrame" title="GTO 홀덤 테이블" src="${GT_URL}"></iframe>`;
+  document.body.appendChild(d);
+  document.getElementById("gtClose").onclick=gtClose;
+}
+function gtClose(){const d=document.getElementById("gtov");if(d)d.remove();if(SCREEN==="menu"&&MENUTAB==="home")menu()}
+// admin: settings + today's numbers + every player's stack (reset to the start stack)
+function gtAdminHTML(){
+  const c=GT.cfg,seg=(k,list)=>`<div class="gseg">${list.map(([v,t])=>`<button type="button" class="${String(c[k])===String(v)?"on":""}" data-gk="${k}" data-gv="${v}">${t}</button>`).join("")}</div>`;
+  const rows=(GT.rows||[]).filter(x=>x&&typeof x.s==="number"),today=gtYmd(Date.now());
+  const play=rows.filter(x=>x.day===today).length,bust=rows.filter(x=>x.s<=0&&x.bust&&gtYmd(x.bust)===today).length;
+  const bn=rows.reduce((t,x)=>t+(+x.bn||0),0),lh=rows.reduce((t,x)=>t+(+x.lh||0),0);
+  const list=rows.slice().sort((a,b)=>(b.at||0)-(a.at||0)).map(x=>`<div class="gtrow"><span class="n">${esc(x.name||"이름 없음")}<small>이번 판 ${x.h||0}핸드 · 전체 ${x.th||0}핸드 · 탈락 ${x.bn||0}번</small></span><b class="${x.s<=0?"z":""}">${x.s<=0?"탈락":(+x.s).toFixed(1)+"BB"}</b><button type="button" data-gr="${esc(x.id)}">${GT.arm===x.id?"한 번 더 누르면 되돌려요":c.start+"BB로"}</button></div>`).join("");
+  return `<div class="lbh"><b>GTO 홀덤 테이블</b><span class="muted">플레이어에겐 안 보이는 설정</span></div>
+    <div class="gtst"><div><span>오늘 플레이</span><b>${GT.rows?play+"명":"–"}</b></div><div><span>오늘 탈락</span><b>${GT.rows?bust+"명":"–"}</b></div><div><span>평균 생존</span><b>${bn?Math.round(lh/bn)+"핸드":"–"}</b></div></div>
+    <p class="lbs"><b>난이도</b> 플레이어 화면엔 표시하지 않아요. 어려움 = 빌런이 솔버 전략대로 · 핸드 중 힌트 없음. 보통·쉬움은 빌런 행동이 솔버 전략에서 15%·30% 벗어나요.</p>${seg("diff",[["easy","쉬움"],["mid","보통"],["hard","어려움"]])}
+    <p class="lbs"><b>솔버 정밀도</b> 정밀 = 플랍에서 턴 카드 49장을 모두 풀어요. 플랍마다 계산이 30초~1분쯤 걸려요(기기 따라 더 길 수 있어요).</p>${seg("prec",[["fast","빠름"],["normal","보통"],["precise","정밀"]])}
+    <p class="lbs"><b>시작 스택</b> 새로 받는 스택이에요. 지금 치고 있는 스택은 그대로예요.</p>${seg("start",[[20,"20BB"],[40,"40BB"],[60,"60BB"],[100,"100BB"]])}
+    <p class="lbs"><b>탈락 뒤 다시 받기</b> 스택을 다 잃은 플레이어가 새 스택을 받는 때예요.</p>${seg("regrant",[["day","매일 0시"],["week","매주 월 0시"],["admin","관리자만"]])}
+    <p class="lbs"><b>플레이어 스택 되돌리기</b> 탈락한 플레이어를 바로 다시 치게 하거나, 오류로 스택이 틀렸을 때 써요. 순위·종합 점수와는 따로예요.</p>
+    ${GT.msg?`<p class="lbs" style="color:#F0D7AE">${esc(GT.msg)}</p>`:""}
+    ${GT.rows==null?`<p class="lbs">불러오는 중…</p>`:list||`<p class="lbs">아직 GTO 테이블을 친 플레이어가 없어요.</p>`}`;
+}
+async function gtAdminLoad(){
+  if(!LB.db||!LB.owner)return;
+  try{const q=await LB.db.collection("gtable").get();GT.rows=q.docs.filter(d=>d.exists).map(d=>({id:d.id,...(d.data()||{})}))}catch(e){GT.rows=[];GT.msg="플레이어 스택을 불러오지 못했어요. Firestore 규칙에 gtable 항목이 있는지 확인해 주세요."}
+  gtAdminPaint();
+}
+function gtAdminPaint(){const el=$("adGt");if(!el)return;el.innerHTML=gtAdminHTML();gtAdminBind()}
+function gtAdminBind(){
+  document.querySelectorAll("#adGt [data-gk]").forEach(b=>b.onclick=async()=>{
+    const k=b.dataset.gk,v=k==="start"?+b.dataset.gv:b.dataset.gv;if(String(GT.cfg[k])===String(v))return;
+    const next={...GT.cfg,[k]:v};GT.msg="";
+    try{await LB.db.doc("meta/gtable").set({...next,at:Date.now()});GT.cfg=gtCfgClean(next);GT.msg="저장했어요. 플레이어의 다음 핸드부터 적용돼요."}catch(e){GT.msg="저장하지 못했어요. 다시 눌러 주세요."}
+    gtAdminPaint()});
+  document.querySelectorAll("#adGt [data-gr]").forEach(b=>b.onclick=async()=>{
+    const id=b.dataset.gr;if(GT.arm!==id){GT.arm=id;gtAdminPaint();return}
+    GT.arm=null;const x=(GT.rows||[]).find(r=>r.id===id);if(!x)return;
+    const st=GT.cfg.start,d={name:String(x.name||"").slice(0,12),s:st,h:0,best:st,ev:0,dn:0,good:0,life:(+x.life||0)+1,lh:+x.lh||0,bn:+x.bn||0,bust:0,day:+x.day||0,dh:+x.dh||0,th:+x.th||0,st:Array.isArray(x.st)?x.st.slice(0,8):[],at:Date.now()};
+    try{await LB.db.doc("gtable/"+id).set(d);Object.assign(x,d);GT.msg=`${x.name||"플레이어"} 님 스택을 ${st}BB로 되돌렸어요.`}catch(e){GT.msg="되돌리지 못했어요. 다시 시도해 주세요."}
+    gtAdminPaint()});
 }
 function reviewClose(){const d=document.getElementById("hrov");if(d)d.remove();if(SCREEN==="menu"&&MENUTAB==="home")menu()}
 function moreBind(){
@@ -3578,7 +3669,7 @@ callFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611082357"></script>
+<script src="webgate.js?v=202611091957"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy

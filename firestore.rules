@@ -111,6 +111,22 @@ service cloud.firestore {
         || (isPlayer() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validMark());
       allow delete: if isAdmin() || claimsOld(uid);
     }
+    // gtable: GTO 홀덤 테이블 (11/9) — the player's stack carried over between hands, this run's numbers, villain styles. Separate from scores and ranking.
+    function validGt() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['name', 's', 'h', 'best', 'ev', 'dn', 'good', 'life', 'lh', 'bn', 'bust', 'day', 'dh', 'th', 'st', 'at'])
+        && d.name is string && d.name.size() <= 12
+        && num(d.s) && d.s <= 100000 && num(d.h) && num(d.best) && num(d.ev) && num(d.dn) && num(d.good) && d.good <= d.dn
+        && num(d.life) && num(d.lh) && num(d.bn) && num(d.dh) && num(d.th)
+        && d.bust is number && d.bust >= 0 && d.day is number && d.day >= 0 && d.day <= 99991231 && d.at is number
+        && d.st is list && d.st.size() <= 8;
+    }
+    match /gtable/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || claimsOld(uid));
+      allow create, update: if isAdmin()
+        || (isPlayer() && request.auth.uid == uid && isMember(uid) && !blocked(uid) && validGt());
+      allow delete: if isAdmin() || claimsOld(uid);
+    }
     match /hreview/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin() || claimsOld(uid));
       allow create, update: if isAdmin()
