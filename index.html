@@ -830,7 +830,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611091957";
+window.HGQ_WEB=true;window.APP_VERSION="202611100321";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -3410,7 +3410,7 @@ const GT={cfg:{...GT_DEF},doc:null,rows:null,msg:"",arm:null};
 function gtCfgClean(d){const c={...GT_DEF};d=d||{};if([20,40,60,100].includes(+d.start))c.start=+d.start;if(["day","week","admin"].includes(d.regrant))c.regrant=d.regrant;if(["fast","normal","precise"].includes(d.prec))c.prec=d.prec;if(["easy","mid","hard"].includes(d.diff))c.diff=d.diff;return c}
 const gtYmd=t=>{const d=new Date(t+9*36e5);return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate()};
 window.GT_STORE={
-  who(){return {ok:!!(LB.db&&LB.uid&&hrMember()),name:MYNAME||"",wait:!LB.db}},
+  who(){return {ok:!!(LB.db&&LB.uid&&hrMember()),name:MYNAME||"",uid:LB.uid||"",wait:!LB.db}},
   cfg(){return {...GT.cfg}},
   async load(){if(!LB.db||!LB.uid)throw new Error("nodb");const sn=await LB.db.doc("gtable/"+LB.uid).get();return (sn.exists&&sn.data())||null},
   async save(d){if(!LB.db||!LB.uid)throw new Error("nodb");await LB.db.doc("gtable/"+LB.uid).set(d);GT.doc=d;return true},
@@ -3669,7 +3669,7 @@ callFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611091957"></script>
+<script src="webgate.js?v=202611100321"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy

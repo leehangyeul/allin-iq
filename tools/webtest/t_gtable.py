@@ -119,6 +119,18 @@ async def main():
         f=await open_table(pa);s_now=(store.get('gtable/'+uid) or {}).get('s')
         lbl=await f.evaluate("()=>document.querySelector('#b-start').innerText")
         chk('다시 열면 같은 스택으로 이어서',f'{s_now:.1f}BB' in lbl,(lbl,s_now))
+        # 규칙 게시 전(계정 저장 막힘)에도 게임은 됨: 이 기기에 저장 → 규칙이 열리면 계정으로 옮김
+        import harness2 as H
+        H.DENY.add('gtable');before=dict(store['gtable/'+uid])
+        await pa.click('#gtClose');await asyncio.sleep(.3);f=await open_table(pa)
+        ok1=await f.evaluate("()=>!!document.querySelector('#b-start:not([hidden])')")
+        await f.evaluate("()=>document.querySelector('#b-start').click()");e2,a2,b2=await play(f,2,120);await asyncio.sleep(1)
+        th_local=await f.evaluate("()=>A.th");toast_t=await f.evaluate("()=>document.getElementById('toast').innerText")
+        chk('계정 저장이 막혀도 게임 진행(이 기기에 저장)',ok1 and e2>=1 and th_local>before.get('th',0) and store['gtable/'+uid].get('th')==before.get('th'),(ok1,e2,th_local,toast_t[:30]))
+        H.DENY.discard('gtable')
+        await pa.click('#gtClose');await asyncio.sleep(.3);f=await open_table(pa);await asyncio.sleep(.3)
+        await f.evaluate("()=>document.querySelector('#b-start').click()");await play(f,1,90);await settle(1.2)
+        chk('규칙이 열리면 이 기기 기록이 계정으로',(store['gtable/'+uid].get('th') or 0)>th_local-0.5,(store['gtable/'+uid].get('th'),th_local))
         # 다른 사람 기록은 못 읽음 · 잘못된 값 거부
         pb=await mkpage(b,{'anon':'u_pb'});await open_join(pb,'new');await submit(pb,'abcd1','옆자리','5678')
         r=await pb.evaluate("async(u)=>{try{await LB.db.doc('gtable/'+u).get();return 'read'}catch(e){return 'denied'}}",uid)

@@ -29,9 +29,11 @@ def num(v):return isinstance(v,(int,float)) and not isinstance(v,bool) and 0<=v<
 def valid_score(d):
     try:return isinstance(d.get('name'),str) and 1<=len(d['name'])<=12 and all(num(d.get(k)) for k in ['hands','sum','best','dn','dsum','dbest']) and d['sum']<=d['hands']*100 and d['dsum']<=d['dn']*100
     except Exception:return False
+DENY=set()  # collections whose rules are 'not published yet' (tests)
 def can_read(path,u):
     if not u:return False
     col,_,id=path.partition('/')
+    if col in DENY:return False
     if col=='secret':return is_admin(u)
     if col=='members':return u['uid']==id or is_admin(u)
     if col=='coach':return u['uid']==id or is_admin(u) or claims_old(u,id)
@@ -42,6 +44,7 @@ def can_read(path,u):
 def can_write(path,d,u,delete=False):
     if not u:return False
     col,_,id=path.partition('/')
+    if col in DENY:return False
     if col in('meta','secret'):return is_admin(u)
     if col=='names':
         if delete:return is_admin(u)

@@ -2355,7 +2355,7 @@ const fmt = (x, d = 1) => (x == null || !isFinite(x)) ? '–' : (+x).toFixed(d);
 const sgn = x => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(+x).toFixed(1);
 const pct = x => x == null || !isFinite(x) ? '–' : (x * 100).toFixed(x > 0 && x < 0.1 ? 1 : 0) + '%';
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const BBu = t => String(t).replace(/(?<![:\d.])(\d+(?:\.\d+)?)(?:bb)?(?=$|[\s)·,])/g, '$1BB');
+const BBu = t => String(t).replace(/(\d+(?:\.\d+)?)(?:bb)?(?=$|[\s)·,])/g, (m, n, off, str) => { const p = str[off - 1]; return (p === ':' || p === '.' || (p >= '0' && p <= '9')) ? m : n + 'BB'; });
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
@@ -2416,17 +2416,22 @@ function clean(d) {
 }
 const styles8 = () => { const s = (A && A.st) || []; return Array.from({ length: 8 }, (_, i) => STYLE_KEYS.includes(s[i]) ? s[i] : 'gto'); };
 let saveT = null, saving = Promise.resolve();
+const bkKey = () => { const w = ST.who(); return 'gt_acct_bk_' + (w.uid || w.name || 'me'); };
+let srvWarned = false;
+function srvWarn() { if (srvWarned) return; srvWarned = true; toast('내 계정에 아직 저장되지 않아 이 기기에 저장해 두고 있어요. 연결되면 계정으로 옮겨요.', 4500); }
 function saveNow() {
   clearTimeout(saveT); saveT = null; if (!A) return saving;
   A.at = Date.now(); A.name = (ST.who().name || A.name || '').slice(0, 12); A.st = styles8();
   const snap = JSON.parse(JSON.stringify(A));
-  saving = saving.then(() => ST.save(snap)).catch(e => { console.warn(e); toast('내 계정에 저장하지 못했어요. 연결을 확인해 주세요.'); });
+  if (PS) store.set(bkKey(), snap);
+  saving = saving.then(() => ST.save(snap)).catch(e => { console.warn(e); srvWarn(); });
   return saving;
 }
 function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 700); }
 async function loadAcct() {
-  let d;
-  try { d = await ST.load(); } catch (e) { console.warn(e); return false; }
+  let d, bk = PS ? store.get(bkKey(), null) : null;
+  try { d = await ST.load(); } catch (e) { console.warn(e); d = null; srvWarn(); }
+  if (bk && typeof bk.s === 'number' && (!d || typeof d.s !== 'number' || (+bk.at || 0) > (+d.at || 0))) d = bk; // 계정에 못 올린 최신 기록
   const c = cfg();
   if (!d || typeof d.s !== 'number') { A = fresh(null); await saveNow(); return true; }
   A = clean(d);
