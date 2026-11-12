@@ -148,9 +148,14 @@ async def main():
         except Exception:pass
         await asyncio.sleep(.8)
         chk('핸드 퀴즈 하러 가기',await pa.evaluate("()=>SCREEN")=='hand' and not await pa.query_selector('#gtov'))
-        await pa.evaluate("()=>{qTimerStop();MENUTAB='home';menu()}")
+        await pa.evaluate("()=>{qTimerStop();MENUTAB='home';menu()}");await asyncio.sleep(.3)
+        c1=await pa.evaluate("()=>document.getElementById('goGt').innerText.replace(/\\n/g,' ')")
+        chk('홈 카드: 오늘 탈락이면 다음 받는 때',('탈락' in c1) and ('내일 0시' in c1),c1)
         # 어제 탈락했으면 오늘 새 40BB
-        d=dict(store['gtable/'+uid]);d['bust']=int(time.time()*1000)-2*86400000;store['gtable/'+uid]=d;await broadcast()
+        d=dict(store['gtable/'+uid]);d['bust']=int(time.time()*1000)-2*86400000;store['gtable/'+uid]=d;await broadcast();await asyncio.sleep(.4)
+        await pa.evaluate("()=>{MENUTAB='home';menu()}");await asyncio.sleep(.2)
+        c2=await pa.evaluate("()=>document.getElementById('goGt').innerText.replace(/\\n/g,' ')")
+        chk('홈 카드: 다시 받는 때가 지나면 새 40BB 안내',('새 40BB를 받을 수 있어요' in c2),c2)
         f=await open_table(pa);await settle(.6)
         d2=store['gtable/'+uid]
         chk('다음 날 새 40BB(판 수 +1)',d2.get('s')==40 and d2.get('life')==2 and d2.get('h')==0 and d2.get('bn')==1,(d2.get('s'),d2.get('life'),d2.get('h')))

@@ -82,17 +82,21 @@ function saveSoon() { clearTimeout(saveT); saveT = setTimeout(saveNow, 700); }
 async function loadAcct() {
   let d, bk = PS ? store.get(bkKey(), null) : null;
   try { d = await ST.load(); } catch (e) { console.warn(e); d = null; srvWarn(); }
-  if (bk && typeof bk.s === 'number' && (!d || typeof d.s !== 'number' || (+bk.at || 0) > (+d.at || 0))) d = bk; // 계정에 못 올린 최신 기록
+  let fromBk = false;
+  if (bk && typeof bk.s === 'number' && (!d || typeof d.s !== 'number' || (+bk.at || 0) > (+d.at || 0))) { d = bk; fromBk = true; } // 계정에 못 올린 최신 기록
   const c = cfg();
   if (!d || typeof d.s !== 'number') { A = fresh(null); await saveNow(); return true; }
   A = clean(d);
+  if (fromBk) saveNow();
   if (A.s <= 0 && Date.now() >= nextGrant(A.bust || Date.now(), c.regrant)) { A = fresh(A); await saveNow(); }
   return true;
 }
 
 // ---------- 솔버 워커 ----------
 function makeEndpoints() {
-  const n = Math.max(1, Math.min(6, (navigator.hardwareConcurrency || 4) - 1));
+  // 워커 하나가 정밀 모드에서 메모리를 약 80MB 써요(6개면 페이지가 760MB까지 커져 오래된 휴대폰에서 꺼질 수 있음) → 4개까지, 메모리 3GB 이하 기기는 2개
+  const mem = +navigator.deviceMemory || 8, cap = mem <= 3 ? 2 : 4;
+  const n = Math.max(1, Math.min(cap, (navigator.hardwareConcurrency || 4) - 1));
   const eps = [];
   try {
     const src = ENGINE_SRC + '\nconst __h = makeWorkerHandler();\nself.onmessage = e => { const { id, type, payload } = e.data; try { self.postMessage({ id, result: __h(type, payload) }); } catch (err) { self.postMessage({ id, error: String(err && err.stack || err) }); } };';
@@ -129,6 +133,7 @@ function renderTable(v) {
   const heroIdx = SEAT_ORDER.indexOf(v.heroPos);
   const el = $('seats'); el.innerHTML = '';
   const sty = settings.styles || {};
+  const TW = $('table').clientWidth, TH = $('table').clientHeight;
   v.seats.forEach(s => {
     const k = (SEAT_ORDER.indexOf(s.pos) - heroIdx + 9) % 9;
     if (s.hero) return;
@@ -143,9 +148,14 @@ function renderTable(v) {
     box.innerHTML = `<div class="pos"><span class="dot" style="background:${STYLE_DOT[st]}"></span>${POS_KO[s.pos]}</div><div class="stk">${fmt(s.stack)}</div>`;
     if (v.villain === s.pos) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = '빌런'; box.prepend(t); }
     d.appendChild(box);
-    if (s.lastAct) { const a = document.createElement('div'); a.className = 'act'; a.textContent = BBu(s.lastAct); d.appendChild(a); }
+    if (s.lastAct) { const a = document.createElement('div'); a.className = 'act'; a.textContent = BBu(s.lastAct); if (y < 30) d.prepend(a); else d.appendChild(a); }
     el.appendChild(d);
-    if (streetBet(s) > 0.001 && !v.result) { const b = document.createElement('div'); b.className = 'bet'; b.style.left = (x + (50 - x) * 0.34) + '%'; b.style.top = (y + (47 - y) * 0.34) + '%'; b.textContent = fmt(streetBet(s)); el.appendChild(b); }
+    // 앞 칩: 좁은 화면(테이블 420px 미만)에선 자리 글씨(예: 벳 2.1BB)가 같은 금액을 보여 주니 생략, 넓은 화면에선 자리 바로 바깥(가운데 쪽)에
+    if (streetBet(s) > 0.001 && !v.result && TW >= 420) {
+      const sx = x / 100 * TW, sy = y / 100 * TH; let dx = TW / 2 - sx, dy = 0.47 * TH - sy; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+      const t = Math.min(dx ? d.offsetWidth / 2 / Math.abs(dx) : 1e9, dy ? d.offsetHeight / 2 / Math.abs(dy) : 1e9) + 14;
+      const b = document.createElement('div'); b.className = 'bet'; b.style.left = ((sx + dx * t) / TW * 100) + '%'; b.style.top = ((sy + dy * t) / TH * 100) + '%'; b.textContent = fmt(streetBet(s)); el.appendChild(b);
+    }
     if (s.pos === 'BTN') { const m = document.createElement('div'); m.className = 'btnmark'; m.textContent = 'D'; m.style.left = (x + (50 - x) * 0.3) + '%'; m.style.top = (y + (47 - y) * 0.3 - 6) + '%'; el.appendChild(m); }
   });
   const hero = v.seats.find(s => s.hero);
@@ -228,10 +238,11 @@ function showSizer(info, pick) {
   let val = clamp(z.def);
   const P = [['1/3', 1 / 3], ['1/2', 0.5], ['2/3', 2 / 3], ['3/4', 0.75], ['팟', 1], ['올인', null]];
   el.hidden = false;
-  el.innerHTML = `<div class="szrow"><span class="szl">${word} 크기</span><button type="button" class="szb" id="sz-m" aria-label="줄이기">−</button>
+  el.innerHTML = `<div class="szhd"><span class="szl">${word} 크기</span><span id="sz-pct"></span></div>
+    <div class="szrow"><button type="button" class="szb" id="sz-m" aria-label="줄이기">−</button>
       <label class="szv"><input id="sz-in" type="number" inputmode="decimal" step="0.1" min="${min}" max="${max}" aria-label="${word} 크기 BB"><span>BB</span></label><button type="button" class="szb" id="sz-p" aria-label="늘리기">＋</button></div>
     <input id="sz-r" type="range" min="${min}" max="${max}" step="0.1" aria-label="${word} 크기 슬라이더">
-    <div class="szlb"><span>최소 ${fmt(min)}BB</span><span id="sz-pct"></span><span>올인 ${fmt(max)}BB</span></div>
+    <div class="szlb"><span>최소 ${fmt(min)}BB</span><span>올인 ${fmt(max)}BB</span></div>
     <div class="szps">${P.map(([t, f], i) => `<button type="button" data-p="${i}">${t}</button>`).join('')}</div>
     <p class="note" style="text-align:left">${isRaise ? '레이즈는 이번 스트리트 총액이에요. ' : ''}솔버 기본 크기와 다르면 그 크기로 다시 계산해서 빌런이 대응해요${info.street === 'flop' ? '(플랍은 10~30초 더 걸려요)' : ''}.</p>`;
   const inp = $('sz-in'), rg = $('sz-r');

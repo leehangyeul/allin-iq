@@ -830,7 +830,7 @@ html,body{background:radial-gradient(120% 60% at 50% 0%,#1A1A20 0%,#07090F 60%)}
 
 
 <script>
-window.HGQ_WEB=true;window.APP_VERSION="202611100321";
+window.HGQ_WEB=true;window.APP_VERSION="202611121251";
 (function(){let res;const ready=new Promise(r=>res=r);window.__fbSet=a=>res(a);
   setTimeout(()=>res(null),15000);
   window.claude={use:async n=>{const a=await ready;if(!a)return null;return n==="db"?a.db:n==="user"?a.user:null}};})();
@@ -3381,7 +3381,7 @@ function menu(){
   $("go").onclick=()=>gateGo(()=>start(0));
   $("go2").onclick=()=>gateGo(()=>drillStart());
   $("goRv").onclick=()=>reviewOpen();
-  $("goGt").onclick=()=>gateGo(()=>{menu();gtOpen()});
+  $("goGt").onclick=()=>window.HGQ_WEB?gateGo(()=>{menu();gtOpen()}):webOnly("GTO 홀덤 테이블","은");
 }
 // hand review: its own page (review/index.html) shown over the home screen; closing returns to the same home
 const REVIEW_URL="review/index.html";
@@ -3397,7 +3397,20 @@ window.HR_STORE={
   join(){reviewClose();gateGo(()=>{menu();reviewOpen()})}
 };
 function hrPull(sn){const d=(sn&&sn.exists&&sn.data())||{};HR.list=Array.isArray(d.r)?d.r:[];if(SCREEN==="menu"&&MENUTAB==="home"&&!document.getElementById("hrov"))menu()}
+// 핸드 복기·GTO 홀덤 테이블은 웹앱에만 있는 화면이에요. claude.ai 판에서 누르면 빈 화면 대신 웹앱으로 안내해요 (11/12)
+const WEB_URL="https://leehangyeul.github.io/allin-iq/";
+function webOnly(name,jo){
+  if(document.getElementById("webonly"))return;
+  const ov=document.createElement("div");ov.className="mkov";ov.id="webonly";
+  ov.innerHTML=`<div class="mkdim"></div><div class="mksh" role="dialog" aria-label="${name}"><span class="mkgrip"></span>
+    <div class="mkh"><b>${name}${jo||"은"} 웹앱에서 열려요</b></div>
+    <p class="mkp">이 화면에서는 열 수 없어요. ALLIN IQ 웹앱에서 같은 닉네임으로 참가하면 바로 쓸 수 있어요.</p>
+    <div class="mkbtns"><button type="button" class="ghost" id="woX">닫기</button><a class="cta" id="woGo" href="${WEB_URL}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;text-decoration:none">웹앱 열기</a></div></div>`;
+  const close=()=>ov.remove();
+  document.body.appendChild(ov);ov.querySelector(".mkdim").onclick=close;ov.querySelector("#woX").onclick=close;ov.querySelector("#woGo").addEventListener("click",()=>setTimeout(close,300));
+}
 function reviewOpen(){
+  if(!window.HGQ_WEB){webOnly("핸드 복기","는");return}
   if(document.getElementById("hrov"))return;
   const d=document.createElement("div");d.id="hrov";d.setAttribute("role","dialog");d.setAttribute("aria-label","핸드 복기");
   d.innerHTML=`<div class="hrbar"><button type="button" id="hrClose">‹ 홈</button><span>실전 핸드 복기</span></div><iframe id="hrFrame" title="핸드 복기" src="${REVIEW_URL}"></iframe>`;
@@ -3409,6 +3422,9 @@ const GT_URL="table/index.html",GT_DEF={start:40,regrant:"day",prec:"precise",di
 const GT={cfg:{...GT_DEF},doc:null,rows:null,msg:"",arm:null};
 function gtCfgClean(d){const c={...GT_DEF};d=d||{};if([20,40,60,100].includes(+d.start))c.start=+d.start;if(["day","week","admin"].includes(d.regrant))c.regrant=d.regrant;if(["fast","normal","precise"].includes(d.prec))c.prec=d.prec;if(["easy","mid","hard"].includes(d.diff))c.diff=d.diff;return c}
 const gtYmd=t=>{const d=new Date(t+9*36e5);return d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate()};
+// 탈락 뒤 새 스택을 받는 때 (table/ui.js nextGrant와 같은 규칙: 한국 시간 0시 기준)
+function gtNext(b,m){if(!b)return 0;if(m==="admin")return Infinity;const D=864e5,K=9*36e5,d=Math.floor((b+K)/D);if(m==="week"){const w=(d+4)%7;return (d+(((8-w)%7)||7))*D-K}return (d+1)*D-K}
+function gtWhen(t){if(t===Infinity)return "관리자가 줄 때";const D=864e5,K=9*36e5,dd=Math.floor((t+K)/D)-Math.floor((Date.now()+K)/D);if(dd<=0)return "지금";if(dd===1)return "내일 0시";const x=new Date(t+K);return `${x.getUTCMonth()+1}/${x.getUTCDate()}(${"일월화수목금토"[x.getUTCDay()]}) 0시`}
 window.GT_STORE={
   who(){return {ok:!!(LB.db&&LB.uid&&hrMember()),name:MYNAME||"",uid:LB.uid||"",wait:!LB.db}},
   cfg(){return {...GT.cfg}},
@@ -3420,11 +3436,12 @@ window.GT_STORE={
 function gtPull(sn){GT.doc=(sn&&sn.exists&&sn.data())||null;if(SCREEN==="menu"&&MENUTAB==="home"&&!document.getElementById("gtov")&&!document.getElementById("hrov"))menu()}
 function gtSub(){
   const d=GT.doc;if(!d||typeof d.s!=="number")return `9인 토너먼트 테이블에서 ${GT.cfg.start}BB로 끝까지 쳐 보고, 결정마다 EV 손실로 채점받아요`;
-  if(d.s<=0)return `탈락 · 다시 받을 때까지 기다려요 (이번 판 ${d.h||0}핸드)`;
+  if(d.s<=0){const t=gtNext(d.bust||Date.now(),GT.cfg.regrant);return Date.now()>=t?`<span class="gl">새 ${GT.cfg.start}BB를 받을 수 있어요</span> · 눌러서 다시 시작`:`탈락 · 다음 ${GT.cfg.start}BB ${gtWhen(t)} (지난 판 ${d.h||0}핸드)`}
   const td=d.day===gtYmd(Date.now())?(d.dh||0):0;
   return `<span class="gl">내 스택 ${(+d.s).toFixed(1)}BB</span> · 오늘 ${td}핸드 · EV 손실 ${(+d.ev||0).toFixed(1)}BB`;
 }
 function gtOpen(){
+  if(!window.HGQ_WEB){webOnly("GTO 홀덤 테이블","은");return}
   if(document.getElementById("gtov"))return;
   const d=document.createElement("div");d.id="gtov";d.setAttribute("role","dialog");d.setAttribute("aria-label","GTO 홀덤 테이블");
   d.innerHTML=`<div class="hrbar"><button type="button" id="gtClose">‹ 홈</button><span>GTO 홀덤 테이블</span></div><iframe id="gtFrame" title="GTO 홀덤 테이블" src="${GT_URL}"></iframe>`;
@@ -3434,6 +3451,7 @@ function gtOpen(){
 function gtClose(){const d=document.getElementById("gtov");if(d)d.remove();if(SCREEN==="menu"&&MENUTAB==="home")menu()}
 // admin: settings + today's numbers + every player's stack (reset to the start stack)
 function gtAdminHTML(){
+  if(!window.HGQ_WEB)return `<div class="lbh"><b>GTO 홀덤 테이블</b><span class="muted">웹앱 전용</span></div><p class="lbs">GTO 홀덤 테이블은 웹앱에서만 열려요. 난이도·정밀도·시작 스택·탈락 뒤 다시 받기·스택 되돌리기는 웹앱 관리자 화면에서 정해요.</p>`;
   const c=GT.cfg,seg=(k,list)=>`<div class="gseg">${list.map(([v,t])=>`<button type="button" class="${String(c[k])===String(v)?"on":""}" data-gk="${k}" data-gv="${v}">${t}</button>`).join("")}</div>`;
   const rows=(GT.rows||[]).filter(x=>x&&typeof x.s==="number"),today=gtYmd(Date.now());
   const play=rows.filter(x=>x.day===today).length,bust=rows.filter(x=>x.s<=0&&x.bust&&gtYmd(x.bust)===today).length;
@@ -3450,7 +3468,7 @@ function gtAdminHTML(){
     ${GT.rows==null?`<p class="lbs">불러오는 중…</p>`:list||`<p class="lbs">아직 GTO 테이블을 친 플레이어가 없어요.</p>`}`;
 }
 async function gtAdminLoad(){
-  if(!LB.db||!LB.owner)return;
+  if(!window.HGQ_WEB||!LB.db||!LB.owner)return;
   try{const q=await LB.db.collection("gtable").get();GT.rows=q.docs.filter(d=>d.exists).map(d=>({id:d.id,...(d.data()||{})}))}catch(e){GT.rows=[];GT.msg="플레이어 스택을 불러오지 못했어요. Firestore 규칙에 gtable 항목이 있는지 확인해 주세요."}
   gtAdminPaint();
 }
@@ -3669,7 +3687,7 @@ callFix();
 menu();
 lbInit();
 </script>
-<script src="webgate.js?v=202611100321"></script>
+<script src="webgate.js?v=202611121251"></script>
 <div id="upd" class="upd" hidden><span>새 버전이 있어요</span><button id="updGo">새로고침</button></div>
 <script>
 // new-version notice: version.json is rewritten on every deploy
